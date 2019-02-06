@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="read_videofile.cpp" />
     <ClCompile Include="videocapture_basic.cpp" />
   </ItemGroup>

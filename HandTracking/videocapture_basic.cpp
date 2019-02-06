@@ -17,7 +17,7 @@
 using namespace cv;
 using namespace std;
 
-int main(int, char**)
+int main_videocapture_basic(int, char**)
 {
 
 	Mat frame;
