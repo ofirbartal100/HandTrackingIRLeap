@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="read_videofile.cpp" />
     <ClCompile Include="videocapture_basic.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -89,11 +90,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\Recources\Projects\Opencv\opencv\build\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Recources\Projects\Opencv\Opencv_With_Contrib\install\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>D:\Recources\Projects\Opencv\opencv\build\x64\vc14\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opencv_world341d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Recources\Projects\Opencv\Opencv_With_Contrib\install\x64\vc15\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_ts401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_tracking401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_plot401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_datasets401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_video401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\3rdparty\lib\Debug\ippiwd.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\3rdparty\ippicv\ippicv_win\icv\lib\intel64\ippicvmt.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_text401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_ml401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_dnn401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_calib3d401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_features2d401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_flann401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_highgui401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_videoio401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_imgcodecs401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_imgproc401d.lib;D:\Recources\Projects\Opencv\Opencv_With_Contrib\lib\Debug\opencv_core401d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

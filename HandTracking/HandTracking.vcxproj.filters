@@ -18,5 +18,8 @@
     <ClCompile Include="videocapture_basic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="read_videofile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
