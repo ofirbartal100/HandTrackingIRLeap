@@ -5,6 +5,7 @@
 #include "opencv2/highgui.hpp"
 #define FREQUENCY_OF_ROBUST_TRACKER 10
 #define HIGHFPS 500
+#define DEBUG true
 
 using namespace cv;
 using namespace std;
@@ -13,18 +14,25 @@ using namespace std;
 #define SSTR( x ) static_cast< std::ostringstream & >( \
 ( std::ostringstream() << std::dec << x ) ).str()
 
+
+Rect2d getNeighborsROI(const Rect2d& rect, const Mat& mat, float neighboring_scale);
+
+void UpdateROI(float neighboringScale, Mat frame, Rect2d bbox);
+
 int main(int argc, char **argv)
 {
+
+#pragma region Tracker Initializations
+
+
 	// List of tracker types in OpenCV 3.4.1
 	string trackerWorkingTypes[5] = { "KCF", "TLD","MEDIANFLOW", "MOSSE", "CSRT" };
 	string trackerNotWorkingTypes[8] = { "BOOSTING", "MIL", "GOTURN" };
-	// vector <string> trackerTypes(types, std::end(types));
 
 	// Create a tracker
 	string trackerType = trackerWorkingTypes[2];
 
 	Ptr<Tracker> tracker;
-
 
 	if (trackerType == "BOOSTING")
 	{
@@ -57,6 +65,12 @@ int main(int argc, char **argv)
 		tracker = TrackerCSRT::create();
 
 
+	//ROI Weights Initialization
+	float neighboringScale = 0.05;
+
+#pragma endregion
+
+#pragma region Capture Initializations
 	// Read video
 	const string filename = "C:\\Users\\ofir\\Desktop\\temp\\ofir_handTracking.mp4";
 	VideoCapture video;
@@ -68,69 +82,91 @@ int main(int argc, char **argv)
 		cout << "Could not read video file" << endl;
 		return 1;
 	}
+#pragma endregion
 
+#pragma region BoundingBox Initialization
 	// Read first frame 
 	Mat frame, gray_frame;
 	bool ok = video.read(frame);
 	cvtColor(frame, gray_frame, CV_BGR2GRAY);
-	int frameType = frame.type();
-	int types[] = { CV_8UC2, CV_8UC3 ,CV_8UC4,CV_8SC2,CV_8SC3,CV_8SC4,CV_16UC2,CV_16UC3,CV_16UC4,CV_16SC2,CV_16SC3,CV_16SC4, CV_32SC2,CV_32SC3,CV_32SC4,CV_32FC2,CV_32FC3, CV_32FC4, CV_64FC2, CV_64FC3, CV_64FC4,CV_16FC2, CV_16FC3,CV_16FC4 };
 
-	// Define initial bounding box 
-	Rect2d bbox(287, 23, 86, 320);
+	// select a bounding box 
+	Rect2d bbox = selectROI(frame, false);
+#pragma endregion
 
-	// Uncomment the line below to select a different bounding box 
-	bbox = selectROI(frame, false);
-	// Display bounding box. 
-	rectangle(frame, bbox, Scalar(255, 0, 0), 2, 1);
+#pragma region Update ROI
+	UpdateROI(neighboringScale, frame, bbox);
+#pragma endregion
+
+#pragma region Show Image
+	if (DEBUG)
+	{
+		// Display bounding box. 
+		rectangle(frame, bbox, Scalar(255, 0, 0), 2, 1);
+	}
+
 	imshow("Tracking", frame);
-	tracker->init(frame, bbox);
-	//tracker->init(gray_frame, bbox);
+#pragma endregion
 
+#pragma region Reading Loop
 	int updateFromRobustTracker = HIGHFPS / FREQUENCY_OF_ROBUST_TRACKER;
+	tracker->init(frame, bbox);
+
 	while (video.read(frame))
 	{
-
 		if (updateFromRobustTracker == 0)
 		{
-			// Uncomment the line below to select a different bounding box 
+#pragma region Robust Tracker Update
+			//select a bounding box 
 			bbox = selectROI(frame, false);
 			tracker.release();
 			tracker = TrackerMedianFlow::create();
 			tracker->init(frame, bbox);
 			updateFromRobustTracker = HIGHFPS / FREQUENCY_OF_ROBUST_TRACKER;
+#pragma endregion
 		}
 		updateFromRobustTracker--;
 
+#pragma region Fast Tracker Update
 		// Start timer
 		double timer = (double)getTickCount();
 
 		// Update the tracking result
 		bool ok = tracker->update(frame, bbox);
-		//bool ok = tracker->update(gray_frame, bbox);
+
+#pragma region Update ROI
+		UpdateROI(neighboringScale, frame, bbox);
+#pragma endregion
 
 		// Calculate Frames per second (FPS)
 		float fps = getTickFrequency() / ((double)getTickCount() - timer);
+#pragma endregion
 
-		if (ok)
+
+#pragma region Show Image
+		if (DEBUG)
 		{
-			// Tracking success : Draw the tracked object
-			rectangle(frame, bbox, Scalar(255, 0, 0), 2, 1);
-		}
-		else
-		{
-			// Tracking failure detected.
-			putText(frame, "Tracking failure detected", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
-		}
+			if (ok)
+			{
+				// Tracking success : Draw the tracked object
+				rectangle(frame, bbox, Scalar(255, 0, 0), 2, 1);
+			}
+			else
+			{
+				// Tracking failure detected.
+				putText(frame, "Tracking failure detected", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
+			}
 
-		// Display tracker type on frame
-		putText(frame, trackerType + " Tracker", Point(100, 20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50, 170, 50), 2);
+			// Display tracker type on frame
+			putText(frame, trackerType + " Tracker", Point(100, 20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50, 170, 50), 2);
 
-		// Display FPS on frame
-		putText(frame, "FPS : " + SSTR(int(fps)), Point(100, 50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50, 170, 50), 2);
+			// Display FPS on frame
+			putText(frame, "FPS : " + SSTR(int(fps)), Point(100, 50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50, 170, 50), 2);
+		}
 
 		// Display frame.
 		imshow("Tracking", frame);
+#pragma endregion
 
 		// Exit if ESC pressed.
 		int k = waitKey(1);
@@ -140,4 +176,34 @@ int main(int argc, char **argv)
 		}
 
 	}
+#pragma endregion
+
+}
+
+Rect2d getNeighborsROI(const Rect2d& rect, const Mat& mat, float neighboring_scale)
+{
+	int width = rect.width * (1 + neighboring_scale);
+	int height = rect.height * (1 + neighboring_scale);
+	if (rect.x + rect.width * (1 + neighboring_scale) >= mat.cols)
+	{
+		width = mat.cols - rect.x - 1;
+	}
+	if (rect.y + rect.height * (1 + neighboring_scale) >= mat.rows)
+	{
+		height = mat.rows - rect.y - 1;
+	}
+
+	return Rect2d(rect.x, rect.y, width, height);
+}
+
+
+void UpdateROI(float neighboringScale, Mat frame, Rect2d bbox)
+{
+	//update search ROI
+	Rect2d neighboringROI = getNeighborsROI(bbox, frame, neighboringScale);
+	//extract the search roi out of the frame
+	const Mat ROIref = frame(neighboringROI);
+	Mat ROI;
+	ROIref.copyTo(ROI);
+	imshow("ROI", ROI);
 }
