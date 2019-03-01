@@ -3,6 +3,7 @@
 #include "opencv2/tracking.hpp"
 #include "opencv2/videoio.hpp"
 #include "opencv2/highgui.hpp"
+#include <opencv2/objdetect.hpp>
 #define FREQUENCY_OF_ROBUST_TRACKER 10
 #define HIGHFPS 500
 #define DEBUG true
@@ -67,6 +68,13 @@ int main(int argc, char **argv)
 
 	//ROI Weights Initialization
 	float neighboringScale = 0.05;
+
+	//HaarCascade Detector
+	CascadeClassifier handDetector;
+	if (!handDetector.load("C:\\Users\\ofir\\Desktop\\temp\\palm_v4.xml")) {
+		std::cout << "Error Loading Cascade" << endl;
+		return 1;
+	}
 
 #pragma endregion
 
@@ -134,19 +142,31 @@ int main(int argc, char **argv)
 		// Update the tracking result
 		bool ok = tracker->update(frame, bbox);
 
-#pragma region Update ROI
-		Mat ROI = UpdateROI(neighboringScale, frame, bbox);
-#pragma endregion
-
-#pragma region Integral Image Of ROI
-
-		Mat integralImage;
-		cv::integral(ROI, integralImage);
-
-#pragma endregion
-
 #pragma region Haar Cascade Detector
 
+		std::vector<Rect> hands;
+		//update search ROI
+		Rect2d neighboringROI = getNeighborsROI(bbox, frame, neighboringScale);
+
+		const Mat ROIref = frame(neighboringROI);
+		Mat MaxROI;
+		ROIref.copyTo(MaxROI);
+
+		imshow("ROI", MaxROI);
+
+		Mat ROI_gray;
+		Size minSize(int(MaxROI.cols*(1 - neighboringScale)), int(MaxROI.rows*(1 - neighboringScale)));
+
+		cvtColor(MaxROI, ROI_gray, CV_BGR2GRAY);
+		equalizeHist(ROI_gray, ROI_gray);
+		handDetector.detectMultiScale(ROI_gray, hands, 1 + 0.5*neighboringScale, 2, 0, minSize);
+		if (hands.size() > 0)
+		{
+			bbox.x = neighboringROI.x + hands[0].x;
+			bbox.y = neighboringROI.y + hands[0].y;
+			bbox.width = hands[0].width;
+			bbox.height = hands[0].height;
+		}
 
 #pragma endregion
 
@@ -197,16 +217,22 @@ Rect2d getNeighborsROI(const Rect2d& rect, const Mat& mat, float neighboring_sca
 {
 	int width = rect.width * (1 + neighboring_scale);
 	int height = rect.height * (1 + neighboring_scale);
-	if (rect.x + rect.width * (1 + neighboring_scale) >= mat.cols)
+	int x = rect.x - (width - rect.width) / 2;
+	int y = rect.y - (height - rect.height) / 2;
+
+	if (x < 0) x = 0;
+	if (y < 0) y = 0;
+
+	if (x + width >= mat.cols)
 	{
-		width = mat.cols - rect.x - 1;
+		width = mat.cols - x - 1;
 	}
-	if (rect.y + rect.height * (1 + neighboring_scale) >= mat.rows)
+	if (y + height >= mat.rows)
 	{
-		height = mat.rows - rect.y - 1;
+		height = mat.rows - y - 1;
 	}
 
-	return Rect2d(rect.x, rect.y, width, height);
+	return Rect2d(x, y, width, height);
 }
 
 

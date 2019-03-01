@@ -95,7 +95,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>..\lib\opencv_ts401d.lib;..\lib\opencv_tracking401d.lib;..\lib\opencv_plot401d.lib;..\lib\opencv_datasets401d.lib;..\lib\opencv_video401d.lib;..\lib\3rdparty\ippiwd.lib;..\lib\3rdparty\ippicvmt.lib;..\lib\opencv_text401d.lib;..\lib\opencv_ml401d.lib;..\lib\opencv_dnn401d.lib;..\lib\opencv_calib3d401d.lib;..\lib\opencv_features2d401d.lib;..\lib\opencv_flann401d.lib;..\lib\opencv_highgui401d.lib;..\lib\opencv_videoio401d.lib;..\lib\opencv_imgcodecs401d.lib;..\lib\opencv_imgproc401d.lib;..\lib\opencv_core401d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\lib\opencv_ts401d.lib;..\lib\opencv_tracking401d.lib;..\lib\opencv_plot401d.lib;..\lib\opencv_datasets401d.lib;..\lib\opencv_video401d.lib;..\lib\3rdparty\ippiwd.lib;..\lib\3rdparty\ippicvmt.lib;..\lib\opencv_text401d.lib;..\lib\opencv_ml401d.lib;..\lib\opencv_dnn401d.lib;..\lib\opencv_calib3d401d.lib;..\lib\opencv_features2d401d.lib;..\lib\opencv_flann401d.lib;..\lib\opencv_highgui401d.lib;..\lib\opencv_videoio401d.lib;..\lib\opencv_imgcodecs401d.lib;..\lib\opencv_imgproc401d.lib;..\lib\opencv_core401d.lib;..\lib\opencv_objdetect401d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
