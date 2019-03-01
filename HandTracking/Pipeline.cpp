@@ -17,7 +17,7 @@ using namespace std;
 
 Rect2d getNeighborsROI(const Rect2d& rect, const Mat& mat, float neighboring_scale);
 
-void UpdateROI(float neighboringScale, Mat frame, Rect2d bbox);
+Mat UpdateROI(float neighboringScale, Mat frame, Rect2d bbox);
 
 int main(int argc, char **argv)
 {
@@ -135,8 +135,21 @@ int main(int argc, char **argv)
 		bool ok = tracker->update(frame, bbox);
 
 #pragma region Update ROI
-		UpdateROI(neighboringScale, frame, bbox);
+		Mat ROI = UpdateROI(neighboringScale, frame, bbox);
 #pragma endregion
+
+#pragma region Integral Image Of ROI
+
+		Mat integralImage;
+		cv::integral(ROI, integralImage);
+
+#pragma endregion
+
+#pragma region Haar Cascade Detector
+
+
+#pragma endregion
+
 
 		// Calculate Frames per second (FPS)
 		float fps = getTickFrequency() / ((double)getTickCount() - timer);
@@ -197,7 +210,7 @@ Rect2d getNeighborsROI(const Rect2d& rect, const Mat& mat, float neighboring_sca
 }
 
 
-void UpdateROI(float neighboringScale, Mat frame, Rect2d bbox)
+Mat UpdateROI(float neighboringScale, Mat frame, Rect2d bbox)
 {
 	//update search ROI
 	Rect2d neighboringROI = getNeighborsROI(bbox, frame, neighboringScale);
@@ -206,4 +219,5 @@ void UpdateROI(float neighboringScale, Mat frame, Rect2d bbox)
 	Mat ROI;
 	ROIref.copyTo(ROI);
 	imshow("ROI", ROI);
+	return ROI;
 }
