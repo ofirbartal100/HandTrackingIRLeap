@@ -4,17 +4,24 @@
 #include "opencv2/videoio.hpp"
 #include "opencv2/highgui.hpp"
 #include <opencv2/objdetect.hpp>
+
+// Include files to use the pylon API.
+#include <pylon/PylonIncludes.h>
+#ifdef PYLON_WIN_BUILD
+#    include <pylon/PylonGUI.h>
+#endif
+
 #define FREQUENCY_OF_ROBUST_TRACKER 10
 #define HIGHFPS 500
 #define DEBUG true
-
-using namespace cv;
-using namespace std;
 
 // Convert to string
 #define SSTR( x ) static_cast< std::ostringstream & >( \
 ( std::ostringstream() << std::dec << x ) ).str()
 
+using namespace cv;
+using namespace std;
+using namespace Pylon;
 
 Rect2d getNeighborsROI(const Rect2d& rect, const Mat& mat, float neighboring_scale);
 
@@ -79,25 +86,30 @@ int main(int argc, char **argv)
 #pragma endregion
 
 #pragma region Capture Initializations
-	// Read video
-	const string filename = "C:\\Users\\ofir\\Desktop\\temp\\ofir_handTracking.mp4";
-	VideoCapture video;
+	PylonInitialize();
 
-	video.open(filename);
-	// Exit if video is not opened
-	if (!video.isOpened())
-	{
-		cout << "Could not read video file" << endl;
-		return 1;
-	}
+	// Create an instant camera object with the camera device found first.
+	CInstantCamera camera(CTlFactory::GetInstance().CreateFirstDevice());
+
+	// Print the model name of the camera.
+	cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
+
+
+	// This smart pointer will receive the grab result data.
+	CGrabResultPtr ptrGrabResult;
+
+	
+
 #pragma endregion
 
 #pragma region BoundingBox Initialization
 	// Read first frame 
-	Mat frame, gray_frame;
-	bool ok = video.read(frame);
-	cvtColor(frame, gray_frame, CV_BGR2GRAY);
-
+	Mat frame;
+	camera.GrabOne(5000, ptrGrabResult, TimeoutHandling_ThrowException);
+	if (ptrGrabResult->GrabSucceeded())
+	{
+		frame = Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8U, (uint8_t*)ptrGrabResult->GetBuffer());
+	}
 	// select a bounding box 
 	Rect2d bbox = selectROI(frame, false);
 #pragma endregion
@@ -113,101 +125,121 @@ int main(int argc, char **argv)
 		rectangle(frame, bbox, Scalar(255, 0, 0), 2, 1);
 	}
 
-	imshow("Tracking", frame);
+	cv::imshow("Tracking", frame);
 #pragma endregion
 
 #pragma region Reading Loop
 	int updateFromRobustTracker = HIGHFPS / FREQUENCY_OF_ROBUST_TRACKER;
 	tracker->init(frame, bbox);
 
-	while (video.read(frame))
+
+	// The camera device is parameterized with a default configuration which
+	// sets up free-running continuous acquisition.
+	camera.StartGrabbing();
+
+	// Camera.StopGrabbing() is called automatically by the RetrieveResult() method
+	while (camera.IsGrabbing())
 	{
-		if (updateFromRobustTracker == 0)
+
+		// Wait for an image and then retrieve it. A timeout of 5000 ms is used.
+		camera.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
+		// Image grabbed successfully?
+		if (ptrGrabResult->GrabSucceeded())
 		{
+			frame = Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8U, (uint8_t*)ptrGrabResult->GetBuffer());
+
+			if (updateFromRobustTracker == 0)
+			{
 #pragma region Robust Tracker Update
-			//select a bounding box 
-			bbox = selectROI(frame, false);
-			tracker.release();
-			tracker = TrackerMedianFlow::create();
-			tracker->init(frame, bbox);
-			updateFromRobustTracker = HIGHFPS / FREQUENCY_OF_ROBUST_TRACKER;
+				//select a bounding box 
+				bbox = selectROI(frame, false);
+				tracker.release();
+				tracker = TrackerMedianFlow::create();
+				tracker->init(frame, bbox);
+				updateFromRobustTracker = HIGHFPS / FREQUENCY_OF_ROBUST_TRACKER;
 #pragma endregion
-		}
-		updateFromRobustTracker--;
+			}
+			updateFromRobustTracker--;
 
 #pragma region Fast Tracker Update
-		// Start timer
-		double timer = (double)getTickCount();
+			// Start timer
+			double timer = (double)getTickCount();
 
-		// Update the tracking result
-		bool ok = tracker->update(frame, bbox);
+			// Update the tracking result
+			bool ok = tracker->update(frame, bbox);
 
 #pragma region Haar Cascade Detector
 
-		std::vector<Rect> hands;
-		//update search ROI
-		Rect2d neighboringROI = getNeighborsROI(bbox, frame, neighboringScale);
+			std::vector<Rect> hands;
+			//update search ROI
+			Rect2d neighboringROI = getNeighborsROI(bbox, frame, neighboringScale);
 
-		const Mat ROIref = frame(neighboringROI);
-		Mat MaxROI;
-		ROIref.copyTo(MaxROI);
+			const Mat ROIref = frame(neighboringROI);
+			Mat MaxROI;
+			ROIref.copyTo(MaxROI);
 
-		imshow("ROI", MaxROI);
+			cv::imshow("ROI", MaxROI);
 
-		Mat ROI_gray;
-		Size minSize(int(MaxROI.cols*(1 - neighboringScale)), int(MaxROI.rows*(1 - neighboringScale)));
+			Mat ROI_gray;
+			Size minSize(int(MaxROI.cols*(1 - neighboringScale)), int(MaxROI.rows*(1 - neighboringScale)));
 
-		cvtColor(MaxROI, ROI_gray, CV_BGR2GRAY);
-		equalizeHist(ROI_gray, ROI_gray);
-		handDetector.detectMultiScale(ROI_gray, hands, 1 + 0.5*neighboringScale, 2, 0, minSize);
-		if (hands.size() > 0)
-		{
-			bbox.x = neighboringROI.x + hands[0].x;
-			bbox.y = neighboringROI.y + hands[0].y;
-			bbox.width = hands[0].width;
-			bbox.height = hands[0].height;
-		}
+			/*cv::cvtColor(MaxROI, ROI_gray, CV_BGR2GRAY);
+			cv::equalizeHist(ROI_gray, ROI_gray);*/
+			//handDetector.detectMultiScale(ROI_gray, hands, 1 + 0.5*neighboringScale, 2, 0, minSize);
+			handDetector.detectMultiScale(MaxROI, hands, 1 + 0.5*neighboringScale, 2, 0, minSize);
+			if (hands.size() > 0)
+			{
+				bbox.x = neighboringROI.x + hands[0].x;
+				bbox.y = neighboringROI.y + hands[0].y;
+				bbox.width = hands[0].width;
+				bbox.height = hands[0].height;
+			}
 
 #pragma endregion
 
 
-		// Calculate Frames per second (FPS)
-		float fps = getTickFrequency() / ((double)getTickCount() - timer);
+			// Calculate Frames per second (FPS)
+			float fps = getTickFrequency() / ((double)getTickCount() - timer);
 #pragma endregion
 
 
 #pragma region Show Image
-		if (DEBUG)
-		{
-			if (ok)
+			if (DEBUG)
 			{
-				// Tracking success : Draw the tracked object
-				rectangle(frame, bbox, Scalar(255, 0, 0), 2, 1);
+				if (ok)
+				{
+					// Tracking success : Draw the tracked object
+					rectangle(frame, bbox, Scalar(255, 0, 0), 2, 1);
+				}
+				else
+				{
+					// Tracking failure detected.
+					putText(frame, "Tracking failure detected", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
+				}
+
+				// Display tracker type on frame
+				putText(frame, trackerType + " Tracker", Point(100, 20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50, 170, 50), 2);
+
+				// Display FPS on frame
+				putText(frame, "FPS : " + SSTR(int(fps)), Point(100, 50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50, 170, 50), 2);
 			}
-			else
-			{
-				// Tracking failure detected.
-				putText(frame, "Tracking failure detected", Point(100, 80), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 255), 2);
-			}
 
-			// Display tracker type on frame
-			putText(frame, trackerType + " Tracker", Point(100, 20), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50, 170, 50), 2);
-
-			// Display FPS on frame
-			putText(frame, "FPS : " + SSTR(int(fps)), Point(100, 50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50, 170, 50), 2);
-		}
-
-		// Display frame.
-		imshow("Tracking", frame);
+			// Display frame.
+			cv::imshow("Tracking", frame);
 #pragma endregion
 
-		// Exit if ESC pressed.
-		int k = waitKey(1);
-		if (k == 27)
-		{
-			break;
-		}
+			// Exit if ESC pressed.
+			int k = waitKey(1);
+			if (k == 27)
+			{
+				break;
+			}
 
+		}
+		else
+		{
+			cout << "Error: " << ptrGrabResult->GetErrorCode() << " " << ptrGrabResult->GetErrorDescription() << endl;
+		}
 	}
 #pragma endregion
 
@@ -244,6 +276,6 @@ Mat UpdateROI(float neighboringScale, Mat frame, Rect2d bbox)
 	const Mat ROIref = frame(neighboringROI);
 	Mat ROI;
 	ROIref.copyTo(ROI);
-	imshow("ROI", ROI);
+	cv::imshow("ROI", ROI);
 	return ROI;
 }
