@@ -3,10 +3,12 @@
 #include "opencv2/tracking.hpp"
 #include "opencv2/videoio.hpp"
 #include "opencv2/highgui.hpp"
+#include "opencv2/core.hpp"
 #include <opencv2/objdetect.hpp>
 
 // Include files to use the pylon API.
 #include <pylon/PylonIncludes.h>
+#include <pylon/usb/BaslerUsbInstantCamera.h>
 #ifdef PYLON_WIN_BUILD
 #    include <pylon/PylonGUI.h>
 #endif
@@ -26,6 +28,14 @@ using namespace Pylon;
 Rect2d getNeighborsROI(const Rect2d& rect, const Mat& mat, float neighboring_scale);
 
 Mat UpdateROI(float neighboringScale, Mat frame, Rect2d bbox);
+
+
+DWORD WINAPI myThread(LPVOID lpParameter)
+{
+	unsigned int& myCounter = *((unsigned int*)lpParameter);
+	while (myCounter < 0xFFFFFFFF) ++myCounter;
+	return 0;
+}
 
 int main(int argc, char **argv)
 {
@@ -77,19 +87,19 @@ int main(int argc, char **argv)
 	float neighboringScale = 0.05;
 
 	//HaarCascade Detector
-	CascadeClassifier handDetector;
+	/*CascadeClassifier handDetector;
 	if (!handDetector.load("C:\\Users\\ofir\\Desktop\\temp\\palm_v4.xml")) {
 		std::cout << "Error Loading Cascade" << endl;
 		return 1;
 	}
-
+*/
 #pragma endregion
 
 #pragma region Capture Initializations
 	PylonInitialize();
 
 	// Create an instant camera object with the camera device found first.
-	CInstantCamera camera(CTlFactory::GetInstance().CreateFirstDevice());
+	CBaslerUsbInstantCamera camera(CTlFactory::GetInstance().CreateFirstDevice());
 
 	// Print the model name of the camera.
 	cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
@@ -97,9 +107,15 @@ int main(int argc, char **argv)
 
 	// This smart pointer will receive the grab result data.
 	CGrabResultPtr ptrGrabResult;
+	
+	camera.Open();
+	camera.AcquisitionFrameRateEnable = true;
+	camera.AcquisitionFrameRate = 500;
+
+
+
 
 	
-
 #pragma endregion
 
 #pragma region BoundingBox Initialization
@@ -128,6 +144,15 @@ int main(int argc, char **argv)
 	cv::imshow("Tracking", frame);
 #pragma endregion
 
+
+#pragma region Video Writer
+	/*const string& outputName = "outputVideo.avi";
+	Size frameSize(frame.cols, frame.rows);
+	VideoWriter outputVideo;
+	outputVideo.open(outputName, VideoWriter::fourcc('M', 'J', 'P', 'G'), 500, frameSize,false);
+*/
+#pragma endregion 
+
 #pragma region Reading Loop
 	int updateFromRobustTracker = HIGHFPS / FREQUENCY_OF_ROBUST_TRACKER;
 	//tracker->init(frame, bbox);
@@ -136,76 +161,79 @@ int main(int argc, char **argv)
 	// The camera device is parameterized with a default configuration which
 	// sets up free-running continuous acquisition.
 	camera.StartGrabbing();
-
+	int counter = 0;
+	camera.ExposureTime = 1950;
+	double rrrrr2 = camera.ExposureTime.GetValue();
+	double rrrrr = camera.ResultingFrameRate.GetValue();
 	// Camera.StopGrabbing() is called automatically by the RetrieveResult() method
-	while (camera.IsGrabbing())
+	while (camera.IsGrabbing()&&counter++ < 1000)
 	{
 
 		// Wait for an image and then retrieve it. A timeout of 5000 ms is used.
-		camera.RetrieveResult(5000, ptrGrabResult, TimeoutHandling_ThrowException);
+		camera.RetrieveResult(3, ptrGrabResult, TimeoutHandling_ThrowException);
 		// Image grabbed successfully?
 		if (ptrGrabResult->GrabSucceeded())
 		{
 			frame = Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8U, (uint8_t*)ptrGrabResult->GetBuffer());
-//#pragma region Robust Tracker Update Region
-//
-//
-//			if (updateFromRobustTracker == 0)
-//			{
-//#pragma region Robust Tracker Update
-//				//select a bounding box 
-//				bbox = selectROI(frame, false);
-//				tracker.release();
-//				tracker = TrackerMedianFlow::create();
-//				tracker->init(frame, bbox);
-//				updateFromRobustTracker = HIGHFPS / FREQUENCY_OF_ROBUST_TRACKER;
-//#pragma endregion
-//			}
-//			updateFromRobustTracker--;
-//
-//#pragma endregion
-//
-//#pragma region Fast Tracker Update
-//			// Start timer
-//			double timer = (double)getTickCount();
-//
-//			// Update the tracking result
-//			bool ok = tracker->update(frame, bbox);
-//
-//#pragma region Haar Cascade Detector
-//
-//			std::vector<Rect> hands;
-//			//update search ROI
-//			Rect2d neighboringROI = getNeighborsROI(bbox, frame, neighboringScale);
-//
-//			const Mat ROIref = frame(neighboringROI);
-//			Mat MaxROI;
-//			ROIref.copyTo(MaxROI);
-//
-//			cv::imshow("ROI", MaxROI);
-//
-//			Mat ROI_gray;
-//			Size minSize(int(MaxROI.cols*(1 - neighboringScale)), int(MaxROI.rows*(1 - neighboringScale)));
-//
-//			/*cv::cvtColor(MaxROI, ROI_gray, CV_BGR2GRAY);
-//			cv::equalizeHist(ROI_gray, ROI_gray);*/
-//			//handDetector.detectMultiScale(ROI_gray, hands, 1 + 0.5*neighboringScale, 2, 0, minSize);
-//			handDetector.detectMultiScale(MaxROI, hands, 1 + 0.5*neighboringScale, 2, 0, minSize);
-//			if (hands.size() > 0)
-//			{
-//				bbox.x = neighboringROI.x + hands[0].x;
-//				bbox.y = neighboringROI.y + hands[0].y;
-//				bbox.width = hands[0].width;
-//				bbox.height = hands[0].height;
-//			}
-//
-//#pragma endregion
-//
-//
-//			// Calculate Frames per second (FPS)
-//			float fps = getTickFrequency() / ((double)getTickCount() - timer);
-//#pragma endregion
-//
+			//#pragma region Robust Tracker Update Region
+			//
+			//
+			//			if (updateFromRobustTracker == 0)
+			//			{
+			//#pragma region Robust Tracker Update
+			//				//select a bounding box 
+			//				bbox = selectROI(frame, false);
+			//				tracker.release();
+			//				tracker = TrackerMedianFlow::create();
+			//				tracker->init(frame, bbox);
+			//				updateFromRobustTracker = HIGHFPS / FREQUENCY_OF_ROBUST_TRACKER;
+			//#pragma endregion
+			//			}
+			//			updateFromRobustTracker--;
+			//
+			//#pragma endregion
+			//
+			//#pragma region Fast Tracker Update
+			//			// Start timer
+			//			double timer = (double)getTickCount();
+			//
+			//			// Update the tracking result
+			//			bool ok = tracker->update(frame, bbox);
+			//
+			//#pragma region Haar Cascade Detector
+			//
+			//			std::vector<Rect> hands;
+			//			//update search ROI
+			//			Rect2d neighboringROI = getNeighborsROI(bbox, frame, neighboringScale);
+			//
+			//			const Mat ROIref = frame(neighboringROI);
+			//			Mat MaxROI;
+			//			ROIref.copyTo(MaxROI);
+			//
+			//			cv::imshow("ROI", MaxROI);
+			//
+			//			Mat ROI_gray;
+			//			Size minSize(int(MaxROI.cols*(1 - neighboringScale)), int(MaxROI.rows*(1 - neighboringScale)));
+			//
+			//			/*cv::cvtColor(MaxROI, ROI_gray, CV_BGR2GRAY);
+			//			cv::equalizeHist(ROI_gray, ROI_gray);*/
+			//			//handDetector.detectMultiScale(ROI_gray, hands, 1 + 0.5*neighboringScale, 2, 0, minSize);
+			//			handDetector.detectMultiScale(MaxROI, hands, 1 + 0.5*neighboringScale, 2, 0, minSize);
+			//			if (hands.size() > 0)
+			//			{
+			//				bbox.x = neighboringROI.x + hands[0].x;
+			//				bbox.y = neighboringROI.y + hands[0].y;
+			//				bbox.width = hands[0].width;
+			//				bbox.height = hands[0].height;
+			//			}
+			//
+			//#pragma endregion
+			//
+			//
+			//			// Calculate Frames per second (FPS)
+			//			float fps = getTickFrequency() / ((double)getTickCount() - timer);
+			//#pragma endregion
+			//
 
 #pragma region Show Image
 			//if (DEBUG)
@@ -228,6 +256,8 @@ int main(int argc, char **argv)
 			//	putText(frame, "FPS : " + SSTR(int(fps)), Point(100, 50), FONT_HERSHEY_SIMPLEX, 0.75, Scalar(50, 170, 50), 2);
 			//}
 
+			// Save frame
+			//outputVideo.write(frame);
 			// Display frame.
 			cv::imshow("Tracking", frame);
 #pragma endregion
@@ -244,8 +274,10 @@ int main(int argc, char **argv)
 		{
 			cout << "Error: " << ptrGrabResult->GetErrorCode() << " " << ptrGrabResult->GetErrorDescription() << endl;
 		}
+
 	}
 #pragma endregion
+	//outputVideo.release();
 
 }
 

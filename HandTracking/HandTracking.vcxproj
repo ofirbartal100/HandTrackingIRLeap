@@ -22,6 +22,7 @@
     <ClCompile Include="Pipeline.cpp" />
     <ClCompile Include="read_videofile.cpp" />
     <ClCompile Include="videocapture_basic.cpp" />
+    <ClCompile Include="video_record.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
