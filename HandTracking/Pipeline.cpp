@@ -5,6 +5,7 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/core.hpp"
 #include <opencv2/objdetect.hpp>
+#include <ctime>
 
 // Include files to use the pylon API.
 #include <pylon/PylonIncludes.h>
@@ -162,15 +163,17 @@ int main(int argc, char **argv)
 	// sets up free-running continuous acquisition.
 	camera.StartGrabbing();
 	int counter = 0;
-	camera.ExposureTime = 1950;
+	camera.ExposureTime = 1000;
 	double rrrrr2 = camera.ExposureTime.GetValue();
 	double rrrrr = camera.ResultingFrameRate.GetValue();
 	// Camera.StopGrabbing() is called automatically by the RetrieveResult() method
-	while (camera.IsGrabbing()&&counter++ < 1000)
+	clock_t begin = clock();
+	cout << "start";
+	while (camera.IsGrabbing()&&counter++ < 10000)
 	{
 
 		// Wait for an image and then retrieve it. A timeout of 5000 ms is used.
-		camera.RetrieveResult(3, ptrGrabResult, TimeoutHandling_ThrowException);
+		camera.RetrieveResult(500, ptrGrabResult, TimeoutHandling_ThrowException);
 		// Image grabbed successfully?
 		if (ptrGrabResult->GrabSucceeded())
 		{
@@ -276,6 +279,9 @@ int main(int argc, char **argv)
 		}
 
 	}
+
+	clock_t end = clock();
+	cout << "done in:" << double(end - begin)/CLOCKS_PER_SEC;
 #pragma endregion
 	//outputVideo.release();
 
