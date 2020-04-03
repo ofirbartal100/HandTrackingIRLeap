@@ -16,6 +16,12 @@
 #    include <pylon/PylonGUI.h>
 #endif
 
+extern "C"{
+	#include <LeapC.h>
+	#include <ExampleConnection.h>
+}
+
+
 using namespace cv;
 using namespace std;
 using namespace Pylon;
@@ -198,31 +204,52 @@ public:
 
 int main(int argc, char **argv)
 {
+	//leap connection
+	OpenConnection();
+	while (!IsConnected)
+		millisleep(100); //wait a bit to let the connection complete
+
+	printf("Connected.");
+	LEAP_DEVICE_INFO* deviceProps = GetDeviceProperties();
+	if (deviceProps)
+		printf("Using device %s.\n", deviceProps->serial);
+
+	
+
 	BaslerCamera basler_camera;
 	Mat frame;
 	VideoSaver videoSaver;
 	VideoShower video_shower;
 
 	int counter = 0;
-
+	bool save = false;
+	//save = true;
 	//Initialize capture,saver,shower
 	basler_camera.StartGrabbing();
-	videoSaver.Start();
+
+	if(save)
+		videoSaver.Start("IR_Hands_Video_18.avi");
+
 	video_shower.Start(&frame);
 
 
 	//cout << "start capturing" << endl;
 	//clock_t begin = clock();
-	while (basler_camera.IsGrabbing() && counter++ < 500 * 5)
+	while (basler_camera.IsGrabbing() /*&& (counter++ < 500 * 15 | !save)*/ )
 	{
 		frame = basler_camera.RetrieveFrame();
-		videoSaver.AddFrame(frame.clone());
+
+		if(save)
+			videoSaver.AddFrame(frame.clone());
 	}
 	//clock_t end = clock();
 	//cout << "done capturing in: " << double(end - begin) / CLOCKS_PER_SEC << "seconds" << endl;
 
 	//Close all objects
 	video_shower.Stop();
-	videoSaver.Close();
+
+	if(save)
+		videoSaver.Close();
+
 	basler_camera.Close();
 }
