@@ -26,6 +26,18 @@
     <ClCompile Include="videocapture_basic.cpp" />
     <ClCompile Include="video_record.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AlgorithmHook.h" />
+    <ClInclude Include="BaslerCamera.h" />
+    <ClInclude Include="ImageManipulator.h" />
+    <ClInclude Include="LeapMotion.h" />
+    <ClInclude Include="PointsPatternManipulator.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="UserInputHandler.h" />
+    <ClInclude Include="VideoSaver.h" />
+    <ClInclude Include="VideoShower.h" />
+    <ClInclude Include="VideoShowerAndPattern.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{425231E2-2E44-4556-A027-BECDDD45C36C}</ProjectGuid>
@@ -94,7 +106,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\include;..\include\basler;..\leap\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\include\basler;..\leap\include;..\HandTracking\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\lib;..\lib\basler\x64;</AdditionalLibraryDirectories>
