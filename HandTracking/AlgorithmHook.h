@@ -1,30 +1,41 @@
 #pragma once
 #include "LeapMotion.h"
 
+#include "opencv2/core/cvstd_wrapper.hpp"
+#include "opencv2/tracking.hpp"
+#include "opencv2/videoio.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/core.hpp"
+#include <opencv2/objdetect.hpp>
+#include <opencv2/calib3d.hpp>
+#include "LeapToImageMapper.h"
+
 class AlgorithmHook
 {
 public:
-	virtual void Run(){};
+	virtual void Run(DWORD key_dword) {};
 };
 
 
 class CalibrationAlgorithmHook : public AlgorithmHook
 {
-	LeapMotion* _leap;
-	vector<cv::Vec2i> _anchors;
+	LeapToImageMapper* _mapper;
 public:
-	CalibrationAlgorithmHook(LeapMotion* leap,vector<cv::Vec2i> anchors)
+	CalibrationAlgorithmHook(LeapToImageMapper* mapper)
 	{
-		_leap = leap;
-		_anchors = anchors;
+		_mapper = mapper;
 	}
-	 
-	virtual void Run()
+
+	virtual void Run(DWORD key_dword)
 	{
-		//insert calibration algorithm here
-		if (_leap->UpdateFrame()) {
-			cv::Vec3d* res = _leap->GetJoints();
-			cout << "leap[0]:" << res[0] << " _ anchores[0]:" << _anchors[0] << endl;
+		cout << key_dword << endl;
+		if (key_dword == VK_SPACE)
+		{
+			_mapper->Calibrate();
+		}
+		if (key_dword == 0x15)
+		{
+			_mapper->StartMapping();
 		}
 	}
 };

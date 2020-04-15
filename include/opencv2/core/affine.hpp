@@ -483,7 +483,8 @@ typename cv::Affine3<T>::Vec3 cv::Affine3<T>::translation() const
 {
     return Vec3(matrix.val[3], matrix.val[7], matrix.val[11]);
 }
-
+#undef max
+#undef min
 template<typename T> inline
 typename cv::Affine3<T>::Vec3 cv::Affine3<T>::rvec() const
 {
@@ -509,7 +510,7 @@ typename cv::Affine3<T>::Vec3 cv::Affine3<T>::rvec() const
         {
             double t;
             t = (R.val[0] + 1) * 0.5;
-            rx = std::sqrt(std::max(t, 0.0));
+            rx = std::aqrt(std::max(t, 0.0));
             t = (R.val[4] + 1) * 0.5;
             ry = std::sqrt(std::max(t, 0.0)) * (R.val[1] < 0 ? -1.0 : 1.0);
             t = (R.val[8] + 1) * 0.5;

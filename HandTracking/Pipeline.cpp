@@ -16,6 +16,8 @@
 #include "VideoSaver.h"
 #include "PointsPatternManipulator.h"
 #include "UserInputHandler.h"
+#include "LeapToImageMapper.h"
+#include "LeapToImageMappingManipulator.h"
 using namespace std;
 
 
@@ -23,22 +25,27 @@ int main(int argc, char **argv)
 {
 	SetConsoleTitle("Hand Tracking Console");
 	
-	//vector<cv::Vec2i> pattern1 = { cv::Vec2i(442,311),cv::Vec2i(400,262) ,cv::Vec2i(437,196) ,cv::Vec2i(461,187) ,cv::Vec2i(482,202),cv::Vec2i(497,222) };
-	vector<cv::Vec2i> pattern1 = { cv::Vec2i(510,366),cv::Vec2i(487,314) ,cv::Vec2i(497,301) ,cv::Vec2i(507,294) ,cv::Vec2i(522,295),cv::Vec2i(541,317) };
+	vector<cv::Point2f> pattern1 = { cv::Point2f(510,366),cv::Point2f(487,314) ,cv::Point2f(497,301) ,
+		cv::Point2f(507,294) ,cv::Point2f(522,295),cv::Point2f(541,317) };
+
 	LeapMotion leap;
 	leap.Connect();
 
+	LeapToImageMapper mapper(&leap);
+
+	mapper.SetPattern(pattern1);
+
 	// Set the hook
-	CMyClass* a = CMyClass::getInstance();
-	a->algoHook = new CalibrationAlgorithmHook(&leap, pattern1);
+	UserInputHandler* a = UserInputHandler::getInstance();
+	a->algoHook = new CalibrationAlgorithmHook(&mapper);
 	a->Go();
 
 	BaslerCamera basler_camera;
 	cv::Mat frame;
 	VideoSaver videoSaver;
-	//VideoShower video_shower;
 	VideoShowerAndPattern video_shower;
-	video_shower.ApplyImageManipulation(new PointsPatternManipulator(pattern1));
+	auto manipulator = new LeapToImageMappingManipulator(&mapper);
+	video_shower.ApplyImageManipulation(manipulator);
 
 	int counter = 0;
 	bool save = false;
@@ -57,6 +64,7 @@ int main(int argc, char **argv)
 		while (basler_camera.IsGrabbing() && video_shower.running /*&& (counter++ < 500 * 15 | !save)*/)
 		{
 			frame = basler_camera.RetrieveFrame();
+			leap.UpdateFrame();
 			//if (leap.UpdateFrame())
 			//{
 			//	//cv::Vec3d* res = leap.GetJoints();
@@ -86,4 +94,9 @@ int main(int argc, char **argv)
 		
 	}
 	main_loop->join();
+	if(main_loop)
+	{
+		delete main_loop;
+		cout << "thread* main_loop deleted\n";
+	}
 }

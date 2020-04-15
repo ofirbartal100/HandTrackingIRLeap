@@ -20,9 +20,9 @@ private:
 
 	LEAP_TRACKING_EVENT *frame;
 
-	cv::Vec3d LeapVToVec3d(LEAP_VECTOR lv)
+	cv::Point3f LeapVToVec3d(LEAP_VECTOR lv)
 	{
-		return cv::Vec3d(lv.x, lv.y, lv.z);
+		return cv::Point3f(lv.x, lv.y, lv.z);
 	}
 public:
 	LeapMotion() {}
@@ -55,34 +55,30 @@ public:
 	}
 
 
-	cv::Vec3d* GetJoints()
+	vector<cv::Point3f> GetJoints()
 	{
-		cv::Vec3d joints[21];
+		vector<cv::Point3f> joints;
 		if (frame->nHands > 0)
 		{
 			LEAP_HAND* hand = &frame->pHands[0];
-			int c = 0;
-			joints[c] = LeapVToVec3d(hand->palm.position);
-			c++;
+			joints.push_back(LeapVToVec3d(hand->palm.position));
 
 			for (int i = 0; i < 4; i++)
-				joints[c + i] = LeapVToVec3d(hand->index.bones->next_joint);
-			c += 4;
+				joints.push_back(LeapVToVec3d(hand->thumb.bones->next_joint));
 
 			for (int i = 0; i < 4; i++)
-				joints[c + i] = LeapVToVec3d(hand->middle.bones->next_joint);
-			c += 4;
+				joints.push_back(LeapVToVec3d(hand->index.bones->next_joint));
 
 			for (int i = 0; i < 4; i++)
-				joints[c + i] = LeapVToVec3d(hand->ring.bones->next_joint);
-			c += 4;
+				joints.push_back(LeapVToVec3d(hand->middle.bones->next_joint));
 
 			for (int i = 0; i < 4; i++)
-				joints[c + i] = LeapVToVec3d(hand->pinky.bones->next_joint);
+				joints.push_back(LeapVToVec3d(hand->ring.bones->next_joint));
 
-			return joints;
+			for (int i = 0; i < 4; i++)
+ 				joints.push_back(LeapVToVec3d(hand->pinky.bones->next_joint));
 		}
-		return nullptr;
+		return joints;
 	}
 
 };

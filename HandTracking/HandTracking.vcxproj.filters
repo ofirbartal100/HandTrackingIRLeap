@@ -59,5 +59,11 @@
     <ClInclude Include="AlgorithmHook.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LeapToImageMapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LeapToImageMappingManipulator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

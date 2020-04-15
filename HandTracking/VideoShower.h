@@ -55,6 +55,16 @@ public:
 	{
 		if (running)
 			Stop();
+		if(showing_thread)
+		{
+			delete showing_thread;
+			cout << "thread* showing_thread deleted\n";
+		}
+		if (manipulator)
+		{
+			delete manipulator;
+			cout << "ImageManipulator* manipulator deleted\n";
+		}
 	}
 
 	//start the showing thread in the background, showing the registered frame

@@ -4,9 +4,9 @@
 class PointsPatternManipulator : public ImageManipulator
 {
 private:
-	vector<cv::Vec2i> _pattern;
+	vector<cv::Point2f> _pattern;
 public:
-	PointsPatternManipulator(vector<cv::Vec2i> pattern)
+	PointsPatternManipulator(vector<cv::Point2f> pattern)
 	{
 		_pattern = pattern;
 	}
@@ -15,9 +15,14 @@ public:
 	{
 		for (auto p : _pattern)
 		{
-			auto c = cv::Point(p[0], p[1]);
-			circle(m, c, 3, cv::Scalar(0, 0, 0), -1);
+			auto c = cv::Point(int(p.x), int(p.y));
+			circle(m, c, 3, cv::Scalar(255, 250, 0), -1);
 		}
+	}
+
+	void ChangePoints(vector<cv::Point2f> pattern)
+	{
+		_pattern = pattern;
 	}
 };
 
