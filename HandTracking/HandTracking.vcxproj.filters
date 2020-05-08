@@ -27,6 +27,9 @@
     <ClCompile Include="video_record.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IntrinsicCameraMatrixCalibrationScript.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VideoShower.h">
@@ -65,5 +68,10 @@
     <ClInclude Include="LeapToImageMappingManipulator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="default.xml">
+      <Filter>Source Files</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

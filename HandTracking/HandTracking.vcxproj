@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="IntrinsicCameraMatrixCalibrationScript.cpp" />
     <ClCompile Include="Pipeline.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\include;..\include\basler;</AdditionalIncludeDirectories>
     </ClCompile>
@@ -39,6 +40,9 @@
     <ClInclude Include="VideoSaver.h" />
     <ClInclude Include="VideoShower.h" />
     <ClInclude Include="VideoShowerAndPattern.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="default.xml" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

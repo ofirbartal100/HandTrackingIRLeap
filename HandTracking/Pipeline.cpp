@@ -24,9 +24,17 @@ using namespace std;
 int main(int argc, char **argv)
 {
 	SetConsoleTitle("Hand Tracking Console");
-	
+	/*
 	vector<cv::Point2f> pattern1 = { cv::Point2f(510,366),cv::Point2f(487,314) ,cv::Point2f(497,301) ,
 		cv::Point2f(507,294) ,cv::Point2f(522,295),cv::Point2f(541,317) };
+*/
+	//tip of fingers and base of fingers
+	vector<cv::Point2f> pattern1 = { /*cv::Point2f(500,302),*/
+		cv::Point2f(453,252),cv::Point2f(461,308),
+		cv::Point2f(425,241),cv::Point2f(440,305),
+		cv::Point2f(405,257),cv::Point2f(423,314),
+		cv::Point2f(378,280),cv::Point2f(405,330)
+	};
 
 	LeapMotion leap;
 	leap.Connect();
@@ -40,7 +48,8 @@ int main(int argc, char **argv)
 	a->algoHook = new CalibrationAlgorithmHook(&mapper);
 	a->Go();
 
-	BaslerCamera basler_camera;
+	//BaslerCamera basler_camera;
+	cv::VideoCapture basler_camera(0);
 	cv::Mat frame;
 	VideoSaver videoSaver;
 	VideoShowerAndPattern video_shower;
@@ -51,7 +60,8 @@ int main(int argc, char **argv)
 	bool save = false;
 	//save = true;
 	//Initialize capture,saver,shower
-	basler_camera.StartGrabbing();
+	//basler_camera.StartGrabbing();
+	leap.StartGrabbing();
 
 	if (save)
 		videoSaver.Start("IR_Video_20.avi");
@@ -61,16 +71,10 @@ int main(int argc, char **argv)
 
 	thread* main_loop = new thread([&]()
 	{
-		while (basler_camera.IsGrabbing() && video_shower.running /*&& (counter++ < 500 * 15 | !save)*/)
+		//while (basler_camera.IsGrabbing() && video_shower.running /*&& (counter++ < 500 * 15 | !save)*/)
+		while (basler_camera.read(frame) && video_shower.running /*&& (counter++ < 500 * 15 | !save)*/)
 		{
-			frame = basler_camera.RetrieveFrame();
-			leap.UpdateFrame();
-			//if (leap.UpdateFrame())
-			//{
-			//	//cv::Vec3d* res = leap.GetJoints();
-			//	/*if (res != nullptr)
-			//		cout << res[0] << endl;*/
-			//}
+			//frame = basler_camera.RetrieveFrame();
 			if (save)
 				videoSaver.AddFrame(frame.clone());
 		}
@@ -81,7 +85,8 @@ int main(int argc, char **argv)
 		if (save)
 			videoSaver.Close();
 
-		basler_camera.Close();
+		//basler_camera.Close();
+		basler_camera.release();
 	});
 
 	cout << "Listening For User Input..\n";
@@ -99,4 +104,6 @@ int main(int argc, char **argv)
 		delete main_loop;
 		cout << "thread* main_loop deleted\n";
 	}
+
+	return 0;
 }

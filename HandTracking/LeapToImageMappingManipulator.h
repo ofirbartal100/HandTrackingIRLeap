@@ -7,21 +7,29 @@ class LeapToImageMappingManipulator : public ImageManipulator
 {
 private:
 	LeapToImageMapper * _mapper;
+	int circle_radius;
 public:
 	LeapToImageMappingManipulator(LeapToImageMapper * mapper)
 	{
 		_mapper = mapper;
+		circle_radius = 3;
 	}
 
 	virtual void Manipulate(cv::Mat& m)
 	{
-		if(_mapper->isCalibrated)
+		if (_mapper->isCalibrated)
 		{
-			for (auto p : _mapper->projections)
+			cv::Point c;
+			if (_mapper->Map())
 			{
-				auto c = cv::Point(int(p.x), int(p.y));
-				circle(m, c, 3, cv::Scalar(255, 250, 0), -1);
+				for (auto p : _mapper->projections)
+				{
+					c = cv::Point(int(p.x), int(p.y));
+					if (m.rows <= c.y || c.y < 0 || m.cols <= c.x || c.x < 0) continue;
+					circle(m, c, circle_radius, cv::Scalar(255, 250, 0), -1);
+				}
 			}
+			//cout << _mapper->projections.size() << endl;
 		}
 		else
 		{

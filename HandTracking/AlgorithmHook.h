@@ -35,7 +35,7 @@ public:
 		}
 		if (key_dword == 0x15)
 		{
-			_mapper->StartMapping();
+			//_mapper->Map();
 		}
 	}
 };

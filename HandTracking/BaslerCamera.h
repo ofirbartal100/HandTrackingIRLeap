@@ -43,6 +43,7 @@ public:
 		camera->AcquisitionFrameRateEnable = true;
 		camera->AcquisitionFrameRate = 500;
 		camera->ExposureTime = 1000;
+
 	}
 	~BaslerCamera()
 	{

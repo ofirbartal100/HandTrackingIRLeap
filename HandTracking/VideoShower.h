@@ -28,6 +28,7 @@ protected:
 		{
 			//every loop takes the most up to date value of the referenced frame, and show it when ready
 			cv::Mat temp = referencedFrame->clone();
+			if (temp.data == nullptr) continue;
 			if (is_image_manipulation)
 			{
 				manipulator->Manipulate(temp);
@@ -82,6 +83,11 @@ public:
 		{
 			running = false;
 			showing_thread->join();
+			if(showing_thread)
+			{
+				delete showing_thread;
+				cout << "delete thread* showing_thread\n";
+			}
 			cout << "Closed Video Shower\n";
 		}
 	}
