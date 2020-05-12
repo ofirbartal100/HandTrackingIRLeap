@@ -30,8 +30,6 @@ public:
 			{
 				// lParam is the pointer to the struct containing the data needed, so cast and assign it to kdbStruct.
 				KBDLLHOOKSTRUCT kbdStruct = *((KBDLLHOOKSTRUCT*)lParam);
-
-				cout << "Doing Somthing\n";
 				algoHook->Run(kbdStruct.vkCode);
 
 			}
