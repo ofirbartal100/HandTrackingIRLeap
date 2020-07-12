@@ -30,10 +30,10 @@ int main(int argc, char **argv)
 */
 	//tip of fingers and base of fingers
 	vector<cv::Point2f> pattern1 = { /*cv::Point2f(500,302),*/
-		cv::Point2f(453,252),cv::Point2f(461,308),
-		cv::Point2f(425,241),cv::Point2f(440,305),
-		cv::Point2f(405,257),cv::Point2f(423,314),
-		cv::Point2f(378,280),cv::Point2f(405,330)
+		cv::Point2f(461,308),cv::Point2f(453,252),
+        cv::Point2f(440,305),cv::Point2f(425,241),
+        cv::Point2f(423,314),cv::Point2f(405,257),
+        cv::Point2f(405,330),cv::Point2f(378,280),
 	};
 
 	LeapMotion leap;
@@ -48,8 +48,8 @@ int main(int argc, char **argv)
 	a->algoHook = new CalibrationAlgorithmHook(&mapper);
 	a->Go();
 
-	//BaslerCamera basler_camera;
-	cv::VideoCapture basler_camera(0);
+	BaslerCamera basler_camera;
+	//cv::VideoCapture basler_camera(0);
 	cv::Mat frame;
 	VideoSaver videoSaver;
 	VideoShowerAndPattern video_shower;
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 	bool save = false;
 	//save = true;
 	//Initialize capture,saver,shower
-	//basler_camera.StartGrabbing();
+	basler_camera.StartGrabbing();
 	leap.StartGrabbing();
 
 	if (save)
@@ -71,10 +71,10 @@ int main(int argc, char **argv)
 
 	thread* main_loop = new thread([&]()
 	{
-		//while (basler_camera.IsGrabbing() && video_shower.running /*&& (counter++ < 500 * 15 | !save)*/)
-		while (basler_camera.read(frame) && video_shower.running /*&& (counter++ < 500 * 15 | !save)*/)
+		while (basler_camera.IsGrabbing() && video_shower.running /*&& (counter++ < 500 * 15 | !save)*/)
+		//while (basler_camera.read(frame) && video_shower.running /*&& (counter++ < 500 * 15 | !save)*/)
 		{
-			//frame = basler_camera.RetrieveFrame();
+			frame = basler_camera.RetrieveFrame();
 			if (save)
 				videoSaver.AddFrame(frame.clone());
 		}
@@ -85,8 +85,8 @@ int main(int argc, char **argv)
 		if (save)
 			videoSaver.Close();
 
-		//basler_camera.Close();
-		basler_camera.release();
+		basler_camera.Close();
+		//basler_camera.release();
 	});
 
 	cout << "Listening For User Input..\n";

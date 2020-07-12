@@ -25,7 +25,7 @@ public:
     LeapToImageMapper(LeapMotion* leap)
     {
         _leap = leap;
-        cameraMatrix = cv::Mat(3, 3, CV_64F, calibration_data);
+        cameraMatrix = cv::Mat(3, 3, CV_64F, calibration_data);// *1.125;
         distCoeffs = cv::Mat(5, 1, CV_64F, distortion_coef_data);
     }
 
@@ -45,6 +45,7 @@ public:
         object_points.push_back(_object_points);
 
         auto image_points = std::vector<std::vector<cv::Point2f>>();
+
         image_points.push_back(_image_points);
 
         //cameraMatrix = cv::initCameraMatrix2D(object_points, image_points, frameSize, 0);
@@ -76,7 +77,13 @@ public:
                 }
                 c++;
             }
+            //pinhole camera model maps to image when center is (0,0)
             cv::projectPoints(corresponding_points, rvecs[0], tvecs[0], cameraMatrix, distCoeffs, projections);
+            for (int i = 0; i < projections.size(); i++)
+            {
+                projections[i].x += frameSize.width / 2;
+                projections[i].y += frameSize.height / 2;
+            }
             return true;
         }
         return false;
@@ -89,6 +96,7 @@ public:
             _showed_pattern[i] += point;
         }
     }
+
 
     void RegisterPoints()
     {
@@ -115,9 +123,18 @@ public:
             }
             for (auto showed_pattern_point : _showed_pattern)
             {
-                _image_points.push_back(showed_pattern_point);
+                cv::Point2f pinhole_point = image_point_to_pinhole_point(showed_pattern_point);
+                _image_points.push_back(pinhole_point);
             }
 
         }
+    }
+
+    cv::Point2f image_point_to_pinhole_point(cv::Point2f point)
+    {
+        cv::Point2f pinhole_point;
+        pinhole_point.x = point.x - frameSize.width / 2;
+        pinhole_point.y = point.y - frameSize.height / 2;
+        return pinhole_point;
     }
 };
