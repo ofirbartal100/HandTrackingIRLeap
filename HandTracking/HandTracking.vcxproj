@@ -24,12 +24,14 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\include;..\include\basler;</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="read_videofile.cpp" />
+    <ClCompile Include="UserInputHandler.cpp" />
     <ClCompile Include="videocapture_basic.cpp" />
     <ClCompile Include="video_record.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlgorithmHook.h" />
     <ClInclude Include="BaslerCamera.h" />
+    <ClInclude Include="csvfile.h" />
     <ClInclude Include="ImageManipulator.h" />
     <ClInclude Include="LeapMotion.h" />
     <ClInclude Include="LeapToImageMapper.h" />

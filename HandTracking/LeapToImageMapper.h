@@ -21,6 +21,7 @@ class LeapToImageMapper
 public:
     std::vector<cv::Point2f> projections;
     bool isCalibrated;
+    bool isRecording;
 
     LeapToImageMapper(LeapMotion* leap)
     {
@@ -71,7 +72,7 @@ public:
             //corresponding to the palm and fingertips
             for (auto r : res)
             {
-                if (c == 5 || c == 8 || c == 9 || c == 12 || c == 13 || c == 16 || c == 17 || c == 20)
+                if (c==0 || c== 2 || c==4 || c == 5 || c == 8 || c == 9 || c == 12 || c == 13 || c == 16 || c == 17 || c == 20)
                 {
                     corresponding_points.push_back(r);
                 }
@@ -137,4 +138,5 @@ public:
         pinhole_point.y = point.y - frameSize.height / 2;
         return pinhole_point;
     }
+
 };

@@ -1,19 +1,15 @@
 #pragma once
-#include "LeapMotion.h"
+#ifndef __AHOOK_H__
+#define __AHOOK_H__
 
-#include "opencv2/core/cvstd_wrapper.hpp"
-#include "opencv2/tracking.hpp"
-#include "opencv2/videoio.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/core.hpp"
-#include <opencv2/objdetect.hpp>
-#include <opencv2/calib3d.hpp>
 #include "LeapToImageMapper.h"
+#include "UserInputHandler.h"
 
 class AlgorithmHook
 {
 public:
-    virtual void Run(DWORD key_dword) {};
+    virtual int Run(DWORD key_dword) { return 0; };
+    virtual void Description() {};
 };
 
 
@@ -25,7 +21,10 @@ public:
     CalibrationAlgorithmHook(LeapToImageMapper* mapper)
     {
         _mapper = mapper;
+    }
 
+    virtual void Description()
+    {
         std::cout << "Hook Map :" << endl;
         std::cout << "Move 10px Right : 6" << endl;
         std::cout << "Move 10px Down : 2" << endl;
@@ -35,7 +34,7 @@ public:
         std::cout << "Calculate Calibration : Enter" << endl;
     }
 
-    virtual void Run(DWORD key_dword)
+    virtual int Run(DWORD key_dword)
     {
         const cv::Point2f moveRight(10, 0);
         const cv::Point2f moveDown(0, 10);
@@ -66,9 +65,81 @@ public:
             //enter
         case 13:
             _mapper->Calibrate();
+            return 1; // end calibration stage and go back to main menu
             break;
         }
-
+        return 0;
     }
 };
 
+
+class RecordAlgorithmHook : public AlgorithmHook
+{
+public:
+    RecordAlgorithmHook()
+    {
+    }
+
+    virtual void Description()
+    {
+        std::cout << "Record Menu :" << endl;
+        std::cout << "For Start Recording: R" << endl;
+        std::cout << "For Stop Recording: T" << endl;
+    }
+
+    virtual int Run(DWORD key_dword)
+    {
+
+        switch (key_dword)
+        {
+            //R letter
+        case 82:
+            //_mapper->StartRecording();
+            break;
+
+            //T letter
+        case 84:
+            //_mapper->StopRecording();
+            break;
+        }
+        return 0;
+    }
+};
+
+
+class BaseAlgorithmHook : public AlgorithmHook
+{
+    UserInputHandler* uih;
+    CalibrationAlgorithmHook* cah;
+public:
+    BaseAlgorithmHook(UserInputHandler* a, CalibrationAlgorithmHook* c)
+    {
+        uih = a;
+        cah = c;
+    }
+
+    virtual void Description()
+    {
+        std::cout << "Main Menu :" << endl;
+        std::cout << "For Calibration Stage: C" << endl;
+        std::cout << "For Recording Stage: R" << endl;
+    }
+
+    virtual int Run(DWORD key_dword)
+    {
+
+        switch (key_dword)
+        {
+            //C letter
+        case 67:
+            uih->dynamicAlgoHook = cah;
+            uih->dynamicAlgoHook->Description();
+        //    //R letter
+        //case 82:
+        //    _mapper->ToggleRecord();
+        }
+        return 0;
+    }
+};
+
+#endif

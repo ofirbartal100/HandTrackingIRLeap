@@ -82,7 +82,7 @@ public:
 			if (grabbing_thread)
 			{
 				delete grabbing_thread;
-				cout << "delete thread* grabbing_thread\n";
+				//cout << "delete thread* grabbing_thread\n";
 			}
 		}
 	}

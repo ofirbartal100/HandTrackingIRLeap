@@ -18,6 +18,7 @@
 #include "UserInputHandler.h"
 #include "LeapToImageMapper.h"
 #include "LeapToImageMappingManipulator.h"
+#include "AlgorithmHook.h"
 using namespace std;
 
 
@@ -45,7 +46,9 @@ int main(int argc, char **argv)
 
 	// Set the hook
 	UserInputHandler* a = UserInputHandler::getInstance();
-	a->algoHook = new CalibrationAlgorithmHook(&mapper);
+    CalibrationAlgorithmHook* c = new CalibrationAlgorithmHook(&mapper);
+    a->baseAlgoHook = new BaseAlgorithmHook(a,c);
+    a->dynamicAlgoHook = a->baseAlgoHook;
 	a->Go();
 
 	BaslerCamera basler_camera;
