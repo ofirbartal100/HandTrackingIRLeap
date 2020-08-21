@@ -19,6 +19,7 @@
 #include "LeapToImageMapper.h"
 #include "LeapToImageMappingManipulator.h"
 #include "AlgorithmHook.h"
+#include "AnnotatedVideoSaver.h"
 using namespace std;
 
 
@@ -54,7 +55,8 @@ int main(int argc, char **argv)
 	BaslerCamera basler_camera;
 	//cv::VideoCapture basler_camera(0);
 	cv::Mat frame;
-	VideoSaver videoSaver;
+	//VideoSaver videoSaver;
+    AnnotatedVideoSaver annotatedVideoSaver;
 	VideoShowerAndPattern video_shower;
 	auto manipulator = new LeapToImageMappingManipulator(&mapper);
 	video_shower.ApplyImageManipulation(manipulator);
@@ -67,7 +69,8 @@ int main(int argc, char **argv)
 	leap.StartGrabbing();
 
 	if (save)
-		videoSaver.Start("IR_Video_20.avi");
+		//videoSaver.Start("IR_Video_20.avi");
+        annotatedVideoSaver.Start("D:\\TAU\\Research\\AnnotatedVideos\\");
 
 	video_shower.Start(&frame);     
 
@@ -79,6 +82,7 @@ int main(int argc, char **argv)
 		{
 			frame = basler_camera.RetrieveFrame();
 			if (save)
+
 				videoSaver.AddFrame(frame.clone());
 		}
 
