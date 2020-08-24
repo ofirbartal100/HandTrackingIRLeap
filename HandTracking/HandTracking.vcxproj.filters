@@ -74,6 +74,12 @@
     <ClInclude Include="csvfile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AnnotatedVideoSaver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AnnotationSaver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="default.xml">

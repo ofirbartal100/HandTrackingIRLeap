@@ -93,10 +93,12 @@ public:
 		if (frame->nHands > 0)
 		{
 			LEAP_HAND* hand = &frame->pHands[0];
-			joints.push_back(LeapVToVec3d(hand->palm.position));
 
-			joints.push_back(LeapVToVec3d(hand->thumb.metacarpal.next_joint));
-			joints.push_back(LeapVToVec3d(hand->thumb.proximal.next_joint));
+            auto arm = LeapVToVec3d(hand->arm.next_joint);
+            joints.push_back(arm);
+
+            joints.push_back(LeapVToVec3d(hand->thumb.metacarpal.next_joint));
+            joints.push_back(LeapVToVec3d(hand->thumb.proximal.next_joint));
 			joints.push_back(LeapVToVec3d(hand->thumb.intermediate.next_joint));
 			joints.push_back(LeapVToVec3d(hand->thumb.distal.next_joint));
 

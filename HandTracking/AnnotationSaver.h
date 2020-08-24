@@ -23,20 +23,25 @@ public:
     Annotation(std::vector<cv::Point2f> values) { keypoints = values; }
 
 
-    string ToCsvRecord()
+    string  ToCsvRecord()
     {
+        std::string record;
         for (int i = 0; i < keypoint_number; i++)
         {
             keypoints_values[2 * i] = keypoints[i].x;
             keypoints_values[2 * i + 1] = keypoints[i].y;
-        }
-        string record = std::accumulate(std::begin(keypoints_values), std::end(keypoints_values), string(),
-            [](string &ss, string &s)
-        {
-            return ss.empty() ? s : ss + "," + s;
-        });
 
-        return record + "\n";
+            if(i>0)
+            {
+                record += ",";
+            }
+
+            record += to_string(keypoints_values[2 * i]);
+            record += "," ;
+            record += to_string(keypoints_values[2 * i+1]);
+        }
+        record += "\n";
+        return record;
     }
 };
 
@@ -54,6 +59,7 @@ private:
     {
         Annotation temp_annotation;
         cout << "start saving video" << endl;
+        output_file << "w_x,w_y,t0_x,t0_y,t1_x,t1_y,t2_x,t2_y,t3_x,t3_y,i0_x,i0_y,i1_x,i1_y,i2_x,i2_y,i3_x,i3_y,m0_x,m0_y,m1_x,m1_y,m2_x,m2_y,m3_x,m3_y,r0_x,r0_y,r1_x,r1_y,r2_x,r2_y,r3_x,r3_y,p0_x,p0_y,p1_x,p1_y,p2_x,p2_y,p3_x,p3_y\n";
         //As long as we are saving, and there are frames to save
         while (running || !grabbed_annotations.empty())
         {
@@ -96,7 +102,6 @@ public:
     {
         running = false;
         saving_thread->join();
-        cout << "Finish Saving\n";
         output_file.close();
     }
 };

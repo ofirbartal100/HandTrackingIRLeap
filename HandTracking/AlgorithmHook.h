@@ -4,6 +4,7 @@
 
 #include "LeapToImageMapper.h"
 #include "UserInputHandler.h"
+#include "AnnotatedVideoSaver.h"
 
 class AlgorithmHook
 {
@@ -111,9 +112,11 @@ public:
 
 class RecordAlgorithmHook : public AlgorithmHook
 {
+    AnnotatedVideoSaver* avs;
 public:
-    RecordAlgorithmHook()
+    RecordAlgorithmHook(AnnotatedVideoSaver* saver)
     {
+        avs = saver;
     }
 
     virtual void Description()
@@ -130,12 +133,12 @@ public:
         {
             //R letter
         case 82:
-            //_mapper->StartRecording();
+            avs->Start("D:\\TAU\\Research\\AnnotatedVideos\\");
             break;
 
             //T letter
         case 84:
-            //_mapper->StopRecording();
+            avs->Close();
             break;
         }
         return 0;
@@ -147,11 +150,13 @@ class BaseAlgorithmHook : public AlgorithmHook
 {
     UserInputHandler* uih;
     CalibrationAlgorithmHook* cah;
+    RecordAlgorithmHook* rah;
 public:
-    BaseAlgorithmHook(UserInputHandler* a, CalibrationAlgorithmHook* c)
+    BaseAlgorithmHook(UserInputHandler* a, CalibrationAlgorithmHook* c, RecordAlgorithmHook* r)
     {
         uih = a;
         cah = c;
+        rah = r;
     }
 
     virtual void Description()
@@ -170,9 +175,12 @@ public:
         case 67:
             uih->dynamicAlgoHook = cah;
             uih->dynamicAlgoHook->Description();
-            //    //R letter
-            //case 82:
-            //    _mapper->ToggleRecord();
+            break;
+            //R letter
+        case 82:
+            uih->dynamicAlgoHook = rah;
+            uih->dynamicAlgoHook->Description();
+            break;
         }
         return 0;
     }

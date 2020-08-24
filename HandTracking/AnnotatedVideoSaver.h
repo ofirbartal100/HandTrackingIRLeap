@@ -3,28 +3,32 @@
 #include <concurrent_queue.h>
 #include <iostream>
 #include <synchapi.h>
+#include <direct.h>
 #include "VideoSaver.h"
 #include <iomanip>
 #include "AnnotationSaver.h"
+#define CRT_SECURE_NO_WARNINGS
 
-std::string GetCurrentTimeForFileName()
-{
-    auto time = std::time(nullptr);
-    std::stringstream ss;
-    ss << std::put_time(std::localtime(&time), "%F_%T"); // ISO 8601 without timezone information.
-    auto s = ss.str();
-    std::replace(s.begin(), s.end(), ':', '-');
-    return s;
-}
 
 class AnnotatedVideoSaver
 {
 private:
     VideoSaver videoSaver;
     AnnotationSaver annotationSaver;
-    bool running;
-   
+    static std::string GetCurrentTimeForFileName()
+    {
+        auto time = std::time(nullptr);
+        struct tm timeinfo;
+        localtime_s(&timeinfo, &time);
+        std::stringstream ss;
+        ss << std::put_time(&timeinfo, "%F_%T"); // ISO 8601 without timezone information.
+        auto s = ss.str();
+        std::replace(s.begin(), s.end(), ':', '-');
+        return s;
+    }
 public:
+    bool running;
+
     AnnotatedVideoSaver()
     {
         running = false;
@@ -39,6 +43,7 @@ public:
     void Start(std::string path = ".\\")
     {
         string timestamp = GetCurrentTimeForFileName();
+        _mkdir((path + timestamp+"\\").c_str());
         videoSaver.Start(path + timestamp + "\\Original.avi");
         annotationSaver.Start(path + timestamp + "\\Annotations.csv");
         running = true;
@@ -57,9 +62,17 @@ public:
     //stop recieving new frames and join the background thread
     void Close()
     {
-        videoSaver.Close();
-        annotationSaver.Close();
         running = false;
+        thread* tr1 = new thread([&]()
+        {
+            videoSaver.Close();
+        });
+        thread* tr2 = new thread([&]()
+        {
+            annotationSaver.Close();
+        });
+        tr1->join();
+        tr2->join();
         cout << "Finish Saving\n";
     }
 };

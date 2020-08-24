@@ -42,21 +42,23 @@ int main(int argc, char **argv)
 	leap.Connect();
 
 	LeapToImageMapper mapper(&leap);
-
 	mapper.SetPattern(pattern1);
+    AnnotatedVideoSaver annotatedVideoSaver;
+
 
 	// Set the hook
 	UserInputHandler* a = UserInputHandler::getInstance();
     CalibrationAlgorithmHook* c = new CalibrationAlgorithmHook(&mapper);
-    a->baseAlgoHook = new BaseAlgorithmHook(a,c);
+    RecordAlgorithmHook* r = new RecordAlgorithmHook(&annotatedVideoSaver);
+    a->baseAlgoHook = new BaseAlgorithmHook(a,c,r);
     a->dynamicAlgoHook = a->baseAlgoHook;
 	a->Go();
 
 	BaslerCamera basler_camera;
 	//cv::VideoCapture basler_camera(0);
 	cv::Mat frame;
+
 	//VideoSaver videoSaver;
-    AnnotatedVideoSaver annotatedVideoSaver;
 	VideoShowerAndPattern video_shower;
 	auto manipulator = new LeapToImageMappingManipulator(&mapper);
 	video_shower.ApplyImageManipulation(manipulator);
@@ -68,29 +70,31 @@ int main(int argc, char **argv)
 	basler_camera.StartGrabbing();
 	leap.StartGrabbing();
 
-	if (save)
-		//videoSaver.Start("IR_Video_20.avi");
-        annotatedVideoSaver.Start("D:\\TAU\\Research\\AnnotatedVideos\\");
+	//if (save)
+	//	//videoSaver.Start("IR_Video_20.avi");
+ //       annotatedVideoSaver.Start("D:\\TAU\\Research\\AnnotatedVideos\\");
 
 	video_shower.Start(&frame);     
 
 
 	thread* main_loop = new thread([&]()
 	{
-		while (basler_camera.IsGrabbing() && video_shower.running /*&& (counter++ < 500 * 15 | !save)*/)
-		//while (basler_camera.read(frame) && video_shower.running /*&& (counter++ < 500 * 15 | !save)*/)
+		while (basler_camera.IsGrabbing() && video_shower.running )
 		{
 			frame = basler_camera.RetrieveFrame();
-			if (save)
-
-				videoSaver.AddFrame(frame.clone());
+			if (annotatedVideoSaver.running)
+			{
+                annotatedVideoSaver.AddFrameAndAnnotation(frame.clone(), Annotation(mapper.MapLeapTo2DJoints()));
+			}
+				//videoSaver.AddFrame(frame.clone());
 		}
 
 		//Close all objects
 		video_shower.Stop();
 
-		if (save)
-			videoSaver.Close();
+		/*if (save)
+            annotatedVideoSaver.Close();*/
+			//videoSaver.Close();
 
 		basler_camera.Close();
 		//basler_camera.release();

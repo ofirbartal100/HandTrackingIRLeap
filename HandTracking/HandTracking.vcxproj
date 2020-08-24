@@ -30,6 +30,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlgorithmHook.h" />
+    <ClInclude Include="AnnotatedVideoSaver.h" />
+    <ClInclude Include="AnnotationSaver.h" />
     <ClInclude Include="BaslerCamera.h" />
     <ClInclude Include="csvfile.h" />
     <ClInclude Include="ImageManipulator.h" />

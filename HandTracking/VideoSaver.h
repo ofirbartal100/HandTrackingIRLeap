@@ -76,7 +76,6 @@ public:
 	{
 		running = false;
 		saving_thread->join();
-		cout << "Finish Saving\n";
 		outputVideo.release();
 	}
 };

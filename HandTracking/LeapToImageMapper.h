@@ -79,10 +79,10 @@ public:
             //corresponding to the palm and fingertips
             for (auto r : res)
             {
-                if (c == 0 || c == 2 || c == 4 || c == 5 || c == 8 || c == 9 || c == 12 || c == 13 || c == 16 || c == 17 || c == 20)
-                {
+               /* if (c == 0 || c == 2 || c == 4 || c == 5 || c == 8 || c == 9 || c == 12 || c == 13 || c == 16 || c == 17 || c == 20)
+                {*/
                     corresponding_points.push_back(r);
-                }
+                //}
                 c++;
             }
             //pinhole camera model maps to image when center is (0,0)
@@ -105,7 +105,7 @@ public:
         {
             //pinhole camera model maps to image when center is (0,0)
             cv::projectPoints(res, rvecs[0], tvecs[0], cameraMatrix, distCoeffs, joints_projections);
-            for (int i = 0; i < projections.size(); i++)
+            for (int i = 0; i < joints_projections.size(); i++)
             {
                 joints_projections[i].x += frameSize.width / 2;
                 joints_projections[i].y += frameSize.height / 2;
