@@ -1,12 +1,15 @@
 #pragma once
 #include <opencv2/opencv.hpp>
 #include "LeapMotion.h"
+#include <experimental/filesystem>
+#include "VideoShower.h"
 
 
 class LeapToImageMapper
 {
     LeapMotion* _leap;
     std::vector<cv::Point2f> _showed_pattern;
+    std::vector<cv::Point2f> _snapshot_pattern;
     std::vector<cv::Point2f> _image_points;
     std::vector<cv::Point3f> _object_points;
 
@@ -21,15 +24,19 @@ class LeapToImageMapper
     cv::Mat_<float> transform_scale;
     cv::Mat_<float> transform_rotate;
     cv::Mat_<float> transform_translate;
+    int _keypoints_callback_counter;
+    const cv::Mat* _frame;
 
 public:
     std::vector<cv::Point2f> projections;
     bool isCalibrated;
     bool isRecording;
+    cv::Mat snapshotFrame;
 
-    LeapToImageMapper(LeapMotion* leap)
+    LeapToImageMapper(LeapMotion* leap, const cv::Mat* frame)
     {
         _leap = leap;
+        _frame = frame;
         cameraMatrix = cv::Mat(3, 3, CV_64F, calibration_data);// *1.125;
         distCoeffs = cv::Mat(5, 1, CV_64F, distortion_coef_data);
         transform_scale = cv::Mat(2, 3, CV_32F);
@@ -79,9 +86,9 @@ public:
             //corresponding to the palm and fingertips
             for (auto r : res)
             {
-               /* if (c == 0 || c == 2 || c == 4 || c == 5 || c == 8 || c == 9 || c == 12 || c == 13 || c == 16 || c == 17 || c == 20)
-                {*/
-                    corresponding_points.push_back(r);
+                /* if (c == 0 || c == 2 || c == 4 || c == 5 || c == 8 || c == 9 || c == 12 || c == 13 || c == 16 || c == 17 || c == 20)
+                 {*/
+                corresponding_points.push_back(r);
                 //}
                 c++;
             }
@@ -178,7 +185,6 @@ public:
         }
     }
 
-
     void RegisterPoints()
     {
         std::vector<cv::Point3f> res = _leap->GetJoints();
@@ -191,7 +197,7 @@ public:
             //corresponding to the palm and fingertips
             for (auto r : res)
             {
-                if (c == 5 || c == 8 || c == 9 || c == 12 || c == 13 || c == 16 || c == 17 || c == 20)
+                if (c == 0 || c == 4 || c == 5 || c == 8 || c == 9 || c == 12 || c == 13 || c == 16 || c == 17 || c == 20)
                 {
                     corresponding_points.push_back(r);
                 }
@@ -218,5 +224,59 @@ public:
         pinhole_point.y = point.y - frameSize.height / 2;
         return pinhole_point;
     }
+
+    void RegisterPoints(std::vector<cv::Point3f> object, std::vector<cv::Point2f> image)
+    {
+        for (auto corresponding_point : object)
+        {
+            _object_points.push_back(corresponding_point);
+        }
+        for (auto showed_pattern_point : image)
+        {
+            cv::Point2f pinhole_point = image_point_to_pinhole_point(showed_pattern_point);
+            _image_points.push_back(pinhole_point);
+        }
+
+    }
+    void SnapShot()
+    {
+        thread* snap = new thread([&]()
+        {
+            //take frame
+            std::vector<cv::Point3f> leap = _leap->GetJoints();
+            snapshotFrame = _frame->clone();
+            //display frame
+            _keypoints_callback_counter = 0;
+            cout << _keypoints_callback_counter << endl;
+            _snapshot_pattern.clear();
+            while (_keypoints_callback_counter < 21)
+            {
+                cv::imshow("snapshot", snapshotFrame);
+                cv::setMouseCallback("snapshot", onMouse, this);
+                //mark every keypoint
+                int k = cv::waitKey(50);
+            }
+            cv::destroyWindow("snapshot");
+            //register points
+            RegisterPoints(leap, _snapshot_pattern);
+            cout << "Registered" << endl;
+        });
+    }
+
+    static void onMouse(int event, int x, int y, int a, void* t)
+    {
+        if (event != cv::EVENT_LBUTTONDOWN)
+            return;
+        auto l = static_cast<LeapToImageMapper*>(t);
+        if (l->_keypoints_callback_counter < 21)
+        {
+            cv::Point seed = cv::Point(x, y);
+            cv::circle(l->snapshotFrame, seed, 3, cv::Scalar(255, 255, 255), -1);
+            l->_snapshot_pattern.push_back(seed);
+            l->_keypoints_callback_counter++;
+        }
+
+    }
+
 
 };

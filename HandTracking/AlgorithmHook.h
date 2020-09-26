@@ -5,6 +5,7 @@
 #include "LeapToImageMapper.h"
 #include "UserInputHandler.h"
 #include "AnnotatedVideoSaver.h"
+#include "VideoShower.h"
 
 class AlgorithmHook
 {
@@ -58,12 +59,12 @@ public:
             break;
             //2 numpad down
         case 98:
-            _mapper->TransformPattern(0, 1, 1, 0,10);
+            _mapper->TransformPattern(0, 1, 1, 0, 10);
             //_mapper->MovePattern(moveDown);
             break;
             //4 numpad left
         case 100:
-            _mapper->TransformPattern(0, 1, 1, -10,0);
+            _mapper->TransformPattern(0, 1, 1, -10, 0);
             //_mapper->MovePattern(moveLeft);
             break;
             //8 numpad up
@@ -77,7 +78,7 @@ public:
             break;
             //J scale x down
         case 74:
-            _mapper->TransformPattern(0, 1.0/1.2, 1, 0, 0);
+            _mapper->TransformPattern(0, 1.0 / 1.2, 1, 0, 0);
             break;
             //U scale x up
         case 85:
@@ -85,7 +86,7 @@ public:
             break;
             //K scale y down
         case 75:
-            _mapper->TransformPattern(0, 1, 1.0/1.2, 0, 0);
+            _mapper->TransformPattern(0, 1, 1.0 / 1.2, 0, 0);
             break;
             //O rotate cw
         case 79:
@@ -97,11 +98,16 @@ public:
             break;
         case VK_SPACE:
             _mapper->RegisterPoints();
+            cout << "Registered Points" << endl;
             break;
             //enter
         case 13:
             _mapper->Calibrate();
             return 1; // end calibration stage and go back to main menu
+            break;
+            //S
+        case 83:
+            _mapper->SnapShot();
             break;
         }
         return 0;

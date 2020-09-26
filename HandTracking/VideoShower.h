@@ -15,9 +15,9 @@ using namespace std;
 class VideoShower
 {
 protected:
-	const cv::Mat* referencedFrame;
 	bool is_image_manipulation;
 	ImageManipulator* manipulator;
+    const cv::Mat* referencedFrame;
 
 	thread* showing_thread;
 
@@ -92,4 +92,9 @@ public:
 		}
 	}
 
+    cv::Mat getReferencedFrame()
+	{
+        auto a = referencedFrame->clone();
+        return a;
+	}
 };

@@ -26,7 +26,7 @@ public:
 				{
 					c = cv::Point(int(p.x), int(p.y));
 					if (m.rows <= c.y || c.y < 0 || m.cols <= c.x || c.x < 0) continue;
-					circle(m, c, circle_radius, cv::Scalar(255, 250, 0), -1);
+					circle(m, c, circle_radius, cv::Scalar(255, 255, 255), -1);
 				}
 			}
 			//cout << _mapper->projections.size() << endl;
@@ -36,7 +36,7 @@ public:
 			for (auto p : _mapper->getPattern())
 			{
 				auto c = cv::Point(int(p.x), int(p.y));
-				circle(m, c, 3, cv::Scalar(255, 250, 0), -1);
+				circle(m, c, 3, cv::Scalar(255, 255, 255), -1);
 			}
 		}
 	}
