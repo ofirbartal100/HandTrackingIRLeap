@@ -28,7 +28,7 @@ public:
     virtual void Description()
     {
         std::cout << "Hook Map :" << endl;
-        std::cout << "Move 10px Right : 6" << endl;
+        /*std::cout << "Move 10px Right : 6" << endl;
         std::cout << "Move 10px Down : 2" << endl;
         std::cout << "Move 10px Left : 4" << endl;
         std::cout << "Move 10px Up : 8" << endl;
@@ -37,8 +37,8 @@ public:
         std::cout << "Scale Y Up : I" << endl;
         std::cout << "Scale Y Down : K" << endl;
         std::cout << "Rotate CW : O" << endl;
-        std::cout << "Rotate CCW : L" << endl;
-        std::cout << "Register Current Points For Calibration : Space" << endl;
+        std::cout << "Rotate CCW : L" << endl;*/
+        std::cout << "Annotate Snapshot : S" << endl;
         std::cout << "Calculate Calibration : Enter" << endl;
     }
 
@@ -52,55 +52,55 @@ public:
 
         switch (key_dword)
         {
-            //6 numpad right
-        case 102:
-            _mapper->TransformPattern(0, 1, 1, 10, 0);
-            //_mapper->MovePattern(moveRight);
-            break;
-            //2 numpad down
-        case 98:
-            _mapper->TransformPattern(0, 1, 1, 0, 10);
-            //_mapper->MovePattern(moveDown);
-            break;
-            //4 numpad left
-        case 100:
-            _mapper->TransformPattern(0, 1, 1, -10, 0);
-            //_mapper->MovePattern(moveLeft);
-            break;
-            //8 numpad up
-        case 104:
-            _mapper->TransformPattern(0, 1, 1, 0, -10);
-            //_mapper->MovePattern(moveUp);
-            break;
-            //I scale y up
-        case 73:
-            _mapper->TransformPattern(0, 1, 1.2, 0, 0);
-            break;
-            //J scale x down
-        case 74:
-            _mapper->TransformPattern(0, 1.0 / 1.2, 1, 0, 0);
-            break;
-            //U scale x up
-        case 85:
-            _mapper->TransformPattern(0, 1.2, 1, 0, 0);
-            break;
-            //K scale y down
-        case 75:
-            _mapper->TransformPattern(0, 1, 1.0 / 1.2, 0, 0);
-            break;
-            //O rotate cw
-        case 79:
-            _mapper->TransformPattern(10, 1, 1, 0, 0);
-            break;
-            //L rotate ccw
-        case 76:
-            _mapper->TransformPattern(-10, 1, 1, 0, 0);
-            break;
-        case VK_SPACE:
-            _mapper->RegisterPoints();
-            cout << "Registered Points" << endl;
-            break;
-            //enter
+        //    //6 numpad right
+        //case 102:
+        //    _mapper->TransformPattern(0, 1, 1, 10, 0);
+        //    //_mapper->MovePattern(moveRight);
+        //    break;
+        //    //2 numpad down
+        //case 98:
+        //    _mapper->TransformPattern(0, 1, 1, 0, 10);
+        //    //_mapper->MovePattern(moveDown);
+        //    break;
+        //    //4 numpad left
+        //case 100:
+        //    _mapper->TransformPattern(0, 1, 1, -10, 0);
+        //    //_mapper->MovePattern(moveLeft);
+        //    break;
+        //    //8 numpad up
+        //case 104:
+        //    _mapper->TransformPattern(0, 1, 1, 0, -10);
+        //    //_mapper->MovePattern(moveUp);
+        //    break;
+        //    //I scale y up
+        //case 73:
+        //    _mapper->TransformPattern(0, 1, 1.2, 0, 0);
+        //    break;
+        //    //J scale x down
+        //case 74:
+        //    _mapper->TransformPattern(0, 1.0 / 1.2, 1, 0, 0);
+        //    break;
+        //    //U scale x up
+        //case 85:
+        //    _mapper->TransformPattern(0, 1.2, 1, 0, 0);
+        //    break;
+        //    //K scale y down
+        //case 75:
+        //    _mapper->TransformPattern(0, 1, 1.0 / 1.2, 0, 0);
+        //    break;
+        //    //O rotate cw
+        //case 79:
+        //    _mapper->TransformPattern(10, 1, 1, 0, 0);
+        //    break;
+        //    //L rotate ccw
+        //case 76:
+        //    _mapper->TransformPattern(-10, 1, 1, 0, 0);
+        //    break;
+        //case VK_SPACE:
+        //    _mapper->RegisterPoints();
+        //    cout << "Registered Points" << endl;
+        //    break;
+        //    //enter
         case 13:
             _mapper->Calibrate();
             return 1; // end calibration stage and go back to main menu

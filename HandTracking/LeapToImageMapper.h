@@ -244,22 +244,26 @@ public:
         {
             //take frame
             std::vector<cv::Point3f> leap = _leap->GetJoints();
+            //remove 2nd element, hard to annotate
+            leap.erase(leap.begin() + 1);
             snapshotFrame = _frame->clone();
-            //display frame
-            _keypoints_callback_counter = 0;
-            cout << _keypoints_callback_counter << endl;
-            _snapshot_pattern.clear();
-            while (_keypoints_callback_counter < 21)
+            if (leap.size() > 0)
             {
-                cv::imshow("snapshot", snapshotFrame);
-                cv::setMouseCallback("snapshot", onMouse, this);
-                //mark every keypoint
-                int k = cv::waitKey(50);
+                //display frame
+                _keypoints_callback_counter = 0;
+                _snapshot_pattern.clear();
+                while (_keypoints_callback_counter < 20)
+                {
+                    cv::imshow("snapshot", snapshotFrame);
+                    cv::setMouseCallback("snapshot", onMouse, this);
+                    //mark every keypoint
+                    int k = cv::waitKey(50);
+                }
+                cv::destroyWindow("snapshot");
+                //register points
+                RegisterPoints(leap, _snapshot_pattern);
+                cout << "Registered Snapshot" << endl;
             }
-            cv::destroyWindow("snapshot");
-            //register points
-            RegisterPoints(leap, _snapshot_pattern);
-            cout << "Registered" << endl;
         });
     }
 

@@ -42,11 +42,14 @@ public:
     //start the background thread that saves frames.
     void Start(std::string path = ".\\")
     {
-        string timestamp = GetCurrentTimeForFileName();
-        _mkdir((path + timestamp+"\\").c_str());
-        videoSaver.Start(path + timestamp + "\\Original.avi");
-        annotationSaver.Start(path + timestamp + "\\Annotations.csv");
-        running = true;
+        if (!running)
+        {
+            string timestamp = GetCurrentTimeForFileName();
+            _mkdir((path + timestamp + "\\").c_str());
+            videoSaver.Start(path + timestamp + "\\Original.avi");
+            annotationSaver.Start(path + timestamp + "\\Annotations.csv");
+            running = true;
+        }
     }
 
     //add a frame to the saving frames queue if running

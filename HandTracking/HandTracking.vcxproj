@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DaisukeProjectorCalibration.cpp" />
     <ClCompile Include="IntrinsicCameraMatrixCalibrationScript.cpp" />
     <ClCompile Include="Pipeline.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\include;..\include\basler;</AdditionalIncludeDirectories>
