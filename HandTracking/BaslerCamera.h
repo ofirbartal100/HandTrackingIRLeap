@@ -29,7 +29,7 @@ private:
 	// This smart pointer will receive the grab result data.
 	CGrabResultPtr ptrGrabResult;
 public:
-	BaslerCamera()
+	BaslerCamera(int fps = 500,int exposure = 1000)
 	{
 		PylonInitialize();
 
@@ -41,7 +41,7 @@ public:
 
 		camera->Open();
 		camera->AcquisitionFrameRateEnable = true;
-		camera->AcquisitionFrameRate = 500;
+		camera->AcquisitionFrameRate = fps;
 		camera->ExposureTime = 1000;
 
 	}
