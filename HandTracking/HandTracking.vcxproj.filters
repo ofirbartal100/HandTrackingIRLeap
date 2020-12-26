@@ -36,6 +36,12 @@
     <ClCompile Include="DaisukeProjectorCalibration.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\ofir\Desktop\OpenCV-Spout\OpencvSpout\OpencvSpout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\ofir\Desktop\OpenCV-Spout\OpencvSpout\Opencv2Opengl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VideoShower.h">
@@ -82,6 +88,9 @@
     </ClInclude>
     <ClInclude Include="AnnotationSaver.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\ofir\Desktop\OpenCV-Spout\OpencvSpout\Opencv2Opengl.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
