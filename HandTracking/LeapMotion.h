@@ -16,6 +16,7 @@ using namespace std;
 class LeapMotion
 {
 private:
+
 	int64_t lastFrameID = 0; //The last frame received
 
 	LEAP_TRACKING_EVENT *frame;
@@ -46,14 +47,24 @@ public:
 	{
 		//leap connection
 		OpenConnection();
-		while (!IsConnected)
-			millisleep(100); //wait a bit to let the connection complete
+        
+        while (!IsConnected)
+        {
+            millisleep(100); //wait a bit to let the connection complete
+        }
 
-		printf("Connected.");
 		LEAP_DEVICE_INFO* deviceProps = GetDeviceProperties();
-		if (deviceProps)
-			printf("Using device %s.\n", deviceProps->serial);
 
+        ////abort if no leap motion detected
+        if (deviceProps) {
+            printf("Using device %s.\n", deviceProps->serial);
+            printf("Connected.");
+        }
+        else
+        {
+            cout << "No LeapMotion Detected!" << endl;
+            exit(-4);
+        }
 		UpdateFrame();
 	}
 
@@ -90,6 +101,7 @@ public:
 	vector<cv::Point3f> GetJoints()
 	{
 		vector<cv::Point3f> joints;
+
 		if (frame->nHands > 0)
 		{
 			LEAP_HAND* hand = &frame->pHands[0];

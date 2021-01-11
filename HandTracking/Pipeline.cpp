@@ -23,43 +23,10 @@
 using namespace std;
 
 
-int main2(int argc, char **argv)
+int main__(int argc, char **argv)
 {
 	SetConsoleTitle("Hand Tracking Console");
-	/*
-	vector<cv::Point2f> pattern1 = { cv::Point2f(510,366),cv::Point2f(487,314) ,cv::Point2f(497,301) ,
-		cv::Point2f(507,294) ,cv::Point2f(522,295),cv::Point2f(541,317) };
-*/
-	//tip of fingers and base of fingers left back hand
-	//vector<cv::Point2f> pattern1 = { /*cv::Point2f(500,302),*/
-	//	cv::Point2f(461,308),cv::Point2f(453,252),
- //       cv::Point2f(440,305),cv::Point2f(425,241),
- //       cv::Point2f(423,314),cv::Point2f(405,257),
- //       cv::Point2f(405,330),cv::Point2f(378,280),
-	//};
-
-    //tip of fingers and base of fingers right front hand
-    //vector<cv::Point2f> pattern1 = { /*cv::Point2f(500,302),*/
-    //    cv::Point2f(376,334),cv::Point2f(370,297),
-    //    cv::Point2f(364,336),cv::Point2f(356,296),
-    //    cv::Point2f(356,341),cv::Point2f(343,306),
-    //    cv::Point2f(347,351),cv::Point2f(328,325),
-    //};
-    //tip of fingers and base of fingers right front hand
-    /*vector<cv::Point2f> pattern1 = { cv::Point2f(220,390),cv::Point2f(290,320),
-        cv::Point2f(256,328),cv::Point2f(280,269),
-        cv::Point2f(239,319),cv::Point2f(259,253),
-        cv::Point2f(220,318),cv::Point2f(233,259),
-        cv::Point2f(199,324),cv::Point2f(205,271),
-    };*/
-
- /*   vector<cv::Point2f> pattern1 = { cv::Point2f(720-220,390),cv::Point2f(720 - 320,320),
-        cv::Point2f(720 - 256,328),cv::Point2f(720 - 280,269),
-        cv::Point2f(720 - 239,319),cv::Point2f(720 - 259,253),
-        cv::Point2f(720 - 220,318),cv::Point2f(720 - 233,259),
-        cv::Point2f(720 - 199,324),cv::Point2f(720 - 205,271),
-    };
-*/
+	
 	LeapMotion leap;
 	leap.Connect();
     cv::Mat frame;

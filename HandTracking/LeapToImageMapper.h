@@ -26,6 +26,7 @@ class LeapToImageMapper
     cv::Mat_<float> transform_translate;
     int _keypoints_callback_counter;
     const cv::Mat* _frame;
+    const char* _saved_calibration_file_path = "CalibRegistration.yaml";
 
 public:
     std::vector<cv::Point2f> projections;
@@ -66,13 +67,20 @@ public:
         //cameraMatrix = cv::initCameraMatrix2D(object_points, image_points, frameSize, 0);
 
         std::cout << cameraMatrix << std::endl;
-        reprojection_error = cv::calibrateCamera(object_points, image_points, frameSize, cameraMatrix,
-            distCoeffs, rvecs, tvecs, cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_ZERO_TANGENT_DIST);
+        try
+        {
+            reprojection_error = cv::calibrateCamera(object_points, image_points, frameSize, cameraMatrix,
+                distCoeffs, rvecs, tvecs, cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_ZERO_TANGENT_DIST);
+            std::cout << reprojection_error << std::endl;
+            isCalibrated = true;
+            UpdateProjectionMatrix();
+        }
+        catch(const cv::Exception& e)
+        {
+            std::cout << "bad calibration.. try again" << std::endl;
+        }
 
-        std::cout << reprojection_error << std::endl;
-        //std::cout << distCoeffs << std::endl;
-
-        isCalibrated = true;
+        
     }
 
     bool Map()
@@ -236,16 +244,23 @@ public:
             cv::Point2f pinhole_point = image_point_to_pinhole_point(showed_pattern_point);
             _image_points.push_back(pinhole_point);
         }
-
     }
     void SnapShot()
     {
         thread* snap = new thread([&]()
         {
-            //take frame
+            //take frames
             std::vector<cv::Point3f> leap = _leap->GetJoints();
+            
+            if (leap.size() < 21)
+            {
+                std::cout << "No hand in Leap Frame..." << endl;
+                return;
+            }
+
             //remove 2nd element, hard to annotate
             leap.erase(leap.begin() + 1);
+            
             snapshotFrame = _frame->clone();
             if (leap.size() > 0)
             {
@@ -262,9 +277,40 @@ public:
                 cv::destroyWindow("snapshot");
                 //register points
                 RegisterPoints(leap, _snapshot_pattern);
+                UpdateRegisterPoints();
                 cout << "Registered Snapshot" << endl;
             }
         });
+    }
+
+    void LoadPoints()
+    {
+        cv::FileStorage fs(_saved_calibration_file_path, cv::FileStorage::READ);
+        fs["object_points"] >> _object_points;
+        fs["image_points"] >> _image_points;
+        
+        cv::Mat dummy;
+        fs["projection_matrix"] >> dummy;
+        if (dummy.cols==3)
+            cameraMatrix = cameraMatrix;
+        fs.release();
+    }
+
+    void UpdateRegisterPoints()
+    {
+        cv::FileStorage fs(_saved_calibration_file_path, cv::FileStorage::WRITE);
+        fs << "object_points" << _object_points;
+        fs << "image_points" << _image_points;
+        fs.release();
+    }
+
+    void UpdateProjectionMatrix()
+    {
+        cv::FileStorage fs(_saved_calibration_file_path, cv::FileStorage::WRITE);
+        fs << "object_points" << _object_points;
+        fs << "image_points" << _image_points;
+        fs << "projection_matrix" << cameraMatrix;
+        fs.release();
     }
 
     static void onMouse(int event, int x, int y, int a, void* t)
@@ -279,8 +325,6 @@ public:
             l->_snapshot_pattern.push_back(seed);
             l->_keypoints_callback_counter++;
         }
-
     }
-
 
 };

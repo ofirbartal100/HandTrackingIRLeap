@@ -1,18 +1,12 @@
-#include <iostream>
-#include "GL\glew.h"
 #include "GL\freeglut.h"
 #include "opencv2\opencv.hpp"
 #include "Opencv2Opengl.h"
-#include <filesystem>
 #include "opencv2/core/cvstd_wrapper.hpp"
 #include "opencv2/tracking.hpp"
 #include "opencv2/videoio.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/core.hpp"
 #include <opencv2/objdetect.hpp>
-#include <ctime>
-#include <ppl.h>
-
 #include "VideoShower.h"
 #include "ImageManipulator.h"
 #include "VideoShowerAndPattern.h"
@@ -25,12 +19,21 @@
 #include "LeapToImageMappingManipulator.h"
 #include "AlgorithmHook.h"
 #include "AnnotatedVideoSaver.h"
+#include "AppearanceModel.h"
+#include "UnityDataPipe.h";
+#include <vector>
+#include <algorithm>
+#include <filesystem>
+#include <ppl.h>
+#include <ctime>
+#include <iostream>
 using namespace std;
-#define USE_GLEW
+
 
 
 int main(int argc, char **argv)
 {
+
     // Initializations
     bool isAlgorithmRunning = true;
 
@@ -49,18 +52,27 @@ int main(int argc, char **argv)
     }
 
     // Leap & Basler initialization
-    vector<cv::Point3f> leap_values;
+    /*vector<cv::Point3f> leap_values;
     LeapMotion leap;
-    leap.Connect();
+    leap.Connect();*/
+
     cv::Mat ir_frame;
-    LeapToImageMapper mapper(&leap, &ir_frame);
+    //LeapToImageMapper mapper(&leap, &ir_frame);
     BaslerCamera basler_camera;
 
 
     basler_camera.StartGrabbing();
-    leap.StartGrabbing();
+    //leap.StartGrabbing();
 
-    vector<cv::Point2f> regrresed_keypoint;
+    vector<cv::Point2f> regrresed_keypoint, appearance_regrresed_keypoint;
+    vector<cv::Point2i> unity_keypoint;
+
+
+    //model init
+    AppearanceModel appearanceModel;
+
+    //pull keypoint updates from unity
+    UnityDataPipe unityKeypointsPipe;
 
 
     // 500 FPS frames loop
@@ -75,7 +87,7 @@ int main(int argc, char **argv)
 
             //regress the latest keypoints 
             //use ir_frame and regrresed_keypoint and predict the new regrresed_keypoint
-            // regrresed_keypoint <= model(ir_frame,regrresed_keypoint,attention?)
+            appearance_regrresed_keypoint = appearanceModel.forward(ir_frame, regrresed_keypoint);
 
             //deform game_frame using regrresed_keypoint
             // deformed_game_frame <= deform(game_frame,regrresed_keypoint)
@@ -97,15 +109,17 @@ int main(int argc, char **argv)
         basler_camera.Close();
     });
 
+
+    // 30 FPS 
     // get frames from game with hand texture and position
     thread* game_frames_loop = new thread([&]()
     {
         while (isAlgorithmRunning)
         {
             game_frame = spoutConverter.receiveTexture();
-            Sleep(1000 / 40);
+            unity_keypoint = unityKeypointsPipe.ReadKeypointsFromPipe();
+            Sleep(1000 / 35);
         }
-
     });
 
     ir_frames_loop->join();
@@ -113,4 +127,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

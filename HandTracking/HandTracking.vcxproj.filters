@@ -36,10 +36,25 @@
     <ClCompile Include="DaisukeProjectorCalibration.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\ofir\Desktop\OpenCV-Spout\OpencvSpout\OpencvSpout.cpp">
+    <ClCompile Include="MixedReality.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\ofir\Desktop\OpenCV-Spout\OpencvSpout\Opencv2Opengl.cpp">
+    <ClCompile Include="Opencv2Opengl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OpencvSpout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gl3w.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AppearanceModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dummy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -89,8 +104,14 @@
     <ClInclude Include="AnnotationSaver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\ofir\Desktop\OpenCV-Spout\OpencvSpout\Opencv2Opengl.h">
+    <ClInclude Include="Opencv2Opengl.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AppearanceModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UnityDataPipe.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
