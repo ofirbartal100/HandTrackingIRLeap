@@ -8,12 +8,21 @@ class LeapToImageMappingManipulator : public ImageManipulator
 private:
 	LeapToImageMapper * _mapper;
 	int circle_radius;
+    cv::Scalar _mapperPointColor;
 public:
 	LeapToImageMappingManipulator(LeapToImageMapper * mapper)
 	{
 		_mapper = mapper;
 		circle_radius = 3;
+        _mapperPointColor = cv::Scalar(255, 255, 255);
 	}
+
+    LeapToImageMappingManipulator(LeapToImageMapper * mapper, cv::Scalar mapperPointColor)
+    {
+        _mapper = mapper;
+        circle_radius = 3;
+        _mapperPointColor = mapperPointColor;
+    }
 
 	virtual void Manipulate(cv::Mat& m)
 	{
@@ -26,7 +35,7 @@ public:
 				{
 					c = cv::Point(int(p.x), int(p.y));
 					if (m.rows <= c.y || c.y < 0 || m.cols <= c.x || c.x < 0) continue;
-					circle(m, c, circle_radius, cv::Scalar(255, 255, 255), -1);
+					circle(m, c, circle_radius, _mapperPointColor, -1);
 				}
 			}
 			//cout << _mapper->projections.size() << endl;
