@@ -13,7 +13,9 @@ using namespace std;
 
 class AppearanceModel
 {
-    std::tuple<at::Tensor, at::Tensor, at::Tensor> attention;
+    at::Tensor attention0;
+    at::Tensor attention1;
+    at::Tensor attention2;
     torch::jit::script::Module fanet;
     int window_size = 40;
     float margin_percent = 0.2;
@@ -30,18 +32,22 @@ public:
         }
 
 
-        auto zeros = at::zeros({ 1, });
-        attention = tuple<at::Tensor, at::Tensor, at::Tensor>(zeros, zeros, zeros);
+        attention0 = at::zeros({ 1, });
+        attention1 = at::zeros({ 1, });
+        attention2 = at::zeros({ 1, });
     }
 
-    vector<cv::Point2f> forward(cv::Mat img, vector<cv::Point2f> prev_keypoints)
+    //vector<cv::Point2f> forward(cv::Mat img, vector<cv::Point2f> prev_keypoints)
+    void forward(cv::Mat img, vector<cv::Point2f>& prev_keypoints)
     {
+
         using namespace torch::indexing;
 
 #pragma region crop and resize
         //crop and resize
 
         cv::Rect myROI = AppearanceModel::calculateROI(prev_keypoints, cv::Size(img.cols, img.rows), margin_percent);
+
 
         vector<cv::Point2f> croppedResizedKeypoints;
         cv::Point2f ratio((float)patch_size / myROI.width, (float)patch_size / myROI.height);
@@ -57,20 +63,22 @@ public:
         cv::Mat croppedResizedImage;
         cv::resize(croppedImage, croppedResizedImage, cv::Size(patch_size, patch_size), 0, 0, CV_INTER_LINEAR);
 
+
 #pragma endregion
 
         auto patches = AppearanceModel::normalizedPatches(croppedResizedKeypoints, AppearanceModel::ToTensor(croppedResizedImage), window_size);
-
+        auto attention = tuple<at::Tensor, at::Tensor, at::Tensor>(attention0, attention1, attention2);
         std::vector<torch::jit::IValue> input_to_net = { patches , attention };
         auto outputs = fanet.forward(input_to_net).toTuple();
 
         auto coords = outputs->elements()[0].toTensor();
         //auto heatmaps = outputs->elements()[1].toTensor();
         auto _new_attention = outputs->elements()[2].toTuple();
-        auto new_attention = tuple<at::Tensor, at::Tensor, at::Tensor>(_new_attention->elements()[0].toTensor(),
-            _new_attention->elements()[1].toTensor(),
-            _new_attention->elements()[2].toTensor());
-
+        
+        //update attentions
+        attention0.set_data(_new_attention->elements()[0].toTensor());
+        attention1.set_data(_new_attention->elements()[1].toTensor());
+        attention2.set_data(_new_attention->elements()[2].toTensor());
 
         //(out * self.kp_win_size) - self.kp_win_size / 2 + cuda_noised_labels[:, j]
         vector<cv::Point2f> regressed_coordinates;
@@ -80,20 +88,18 @@ public:
         {
             x = temp.index({ 0,(int)i,0 }).item().toFloat();
             y = temp.index({ 0,(int)i,1 }).item().toFloat();
-            regressed_coordinates.push_back(cv::Point2f(prev_keypoints[i].x + x, prev_keypoints[i].y + y));
+            //regressed_coordinates.push_back(cv::Point2f(prev_keypoints[i].x + x, prev_keypoints[i].y + y));
+            prev_keypoints[i].x += x;
+            prev_keypoints[i].y += y;
         }
 
-        //update attentions
-        attention = new_attention;
-
-        //return regressed coordinates
-        return regressed_coordinates;
+        //return regressed_coordinates;
     }
 
     static at::Tensor ToTensor(cv::Mat img, bool show_output = false, bool unsqueeze = false, int unsqueeze_dim = 0)
     {
         at::Tensor tensor_image = torch::from_blob(img.data, { img.rows, img.cols, 3 }, at::kByte);
-        return tensor_image.permute({ 2,0,1 });;
+        return tensor_image.permute({ 2,0,1 });
     }
 
     static cv::Rect calculateROI(vector<cv::Point2f> keypoints, cv::Size imSize, float margin_prcnt = 0.2)
@@ -149,10 +155,11 @@ public:
             top = (int)keypoints[i].y - window_size / 2;
             left = (int)keypoints[i].x - window_size / 2;
             auto patch = imgTensor.index({ 0, Slice(top,top + window_size),Slice(left,left + window_size) }).toType(at::kFloat);
+
             patch -= patch.mean();
-            patch /= patch.std();
-            patch *= circle_window;
-            patches.index_put_({ 0, (int)i, Slice(), Slice() }, patch);
+            patch /= patch.std() + 1e-3;
+            patch *= circle_window.index({ Slice(0,patch.sizes()[0]), Slice(0,patch.sizes()[1]) });
+            patches.index_put_({ 0, (int)i, Slice(0,patch.sizes()[0]), Slice(0,patch.sizes()[1]) }, patch);
         }
         return patches;
     }
