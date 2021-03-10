@@ -104,14 +104,17 @@ public:
 class BaseAlgorithmHook : public AlgorithmHook
 {
     UserInputHandler* uih;
-    CalibrationAlgorithmHook* cah;
-    RecordAlgorithmHook* rah;
+    int _dynamicAlgoHooksLength;
+    AlgorithmHook** _dynamicAlgoHooks;
+    DWORD* _casesValues;
 public:
-    BaseAlgorithmHook(UserInputHandler* a, CalibrationAlgorithmHook* c, RecordAlgorithmHook* r)
+
+    BaseAlgorithmHook(UserInputHandler* a,int dynamicAlgoHooksLength,  AlgorithmHook** dynamicAlgoHooks, DWORD* casesValues)
     {
         uih = a;
-        cah = c;
-        rah = r;
+        _dynamicAlgoHooksLength = dynamicAlgoHooksLength;
+        _dynamicAlgoHooks = dynamicAlgoHooks;
+        _casesValues = casesValues;
     }
 
     virtual void Description()
@@ -123,19 +126,14 @@ public:
 
     virtual int Run(DWORD key_dword)
     {
-
-        switch (key_dword)
+        for(int i =0;i< _dynamicAlgoHooksLength; i++)
         {
-            //C letter
-        case 67:
-            uih->dynamicAlgoHook = cah;
-            uih->dynamicAlgoHook->Description();
-            break;
-            //R letter
-        case 82:
-            uih->dynamicAlgoHook = rah;
-            uih->dynamicAlgoHook->Description();
-            break;
+            if(_casesValues[i] == key_dword)
+            {
+                uih->dynamicAlgoHook = _dynamicAlgoHooks[i];
+                uih->dynamicAlgoHook->Description();
+                break;
+            }
         }
         return 0;
     }

@@ -25,6 +25,7 @@
     <ClCompile Include="gl3w.c" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="IntrinsicCameraMatrixCalibrationScript.cpp" />
+    <ClCompile Include="LeapCameraCalibration.cpp" />
     <ClCompile Include="MixedReality.cpp" />
     <ClCompile Include="Opencv2Opengl.cpp" />
     <ClCompile Include="OpencvSpout.cpp" />

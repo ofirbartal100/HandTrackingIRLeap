@@ -57,6 +57,9 @@
     <ClCompile Include="dummy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LeapCameraCalibration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VideoShower.h">

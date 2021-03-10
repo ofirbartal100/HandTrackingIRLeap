@@ -30,8 +30,8 @@ class LeapToImageMapper
 
 public:
     std::vector<cv::Point2f> projections;
-    bool isCalibrated;
-    bool isRecording;
+    bool isCalibrated=false;
+    bool isRecording = false;
     cv::Mat snapshotFrame;
 
     LeapToImageMapper(LeapMotion* leap, const cv::Mat* frame)

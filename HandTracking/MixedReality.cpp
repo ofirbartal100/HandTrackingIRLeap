@@ -44,9 +44,10 @@ int main(int argc, char **argv)
     LeapMotion leap;
 
     //show only mapping at first
-    cv::Mat black_frame(720, 540, CV_8UC3, cv::Scalar(0, 0, 0));
+    cv::Mat black_frame(540, 720, CV_8UC3, cv::Scalar(0, 0, 0));
     cv::Mat ir_frame;
-    BaslerCamera basler_camera;
+    //BaslerCamera basler_camera;
+    cv::VideoCapture basler_camera(0);
 
     //assuming its calibrated already and the file is good
     LeapToImageMapper mapper(&leap, &black_frame);
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
     //start sensors
     leap.Connect();
     leap.StartGrabbing();
-    basler_camera.StartGrabbing();
+    //basler_camera.StartGrabbing();
 
 
 
@@ -86,12 +87,13 @@ int main(int argc, char **argv)
     bool waitForUserInput = true;
     while (waitForUserInput)
     {
-        char key = (char)cv::waitKey(0);
+        char key = (char)getchar();
         if (key == ' ')
         {
             waitForUserInput = false;
             //get the current frame
-            ir_frame = basler_camera.RetrieveFrame();
+            //ir_frame = basler_camera.RetrieveFrame();
+            basler_camera >> ir_frame;
             regrresed_keypoint = mapper.projections;//clone projection mapping
             stage = 1;
             leap.StopGrabbing();
@@ -102,6 +104,7 @@ int main(int argc, char **argv)
             stage = 1;
             leap.StopGrabbing();
             video_shower.Stop();
+            waitForUserInput = false;
             return 0;
         }
     }
@@ -142,10 +145,12 @@ int main(int argc, char **argv)
     // get ir frames for fast regression and deformation
     thread* ir_frames_loop = new thread([&]()
     {
-        while (basler_camera.IsGrabbing() && isAlgorithmRunning)
+        //while (basler_camera.IsGrabbing() && isAlgorithmRunning)
+        while (basler_camera.isOpened() && isAlgorithmRunning)
         {
             //get the current frame
-            ir_frame = basler_camera.RetrieveFrame();
+            //ir_frame = basler_camera.RetrieveFrame();
+            basler_camera >> ir_frame;
 
 
             //regress the latest keypoints 
@@ -171,7 +176,8 @@ int main(int argc, char **argv)
         }
 
         //Close all objects
-        basler_camera.Close();
+        //basler_camera.Close();
+        basler_camera.release();
     });
 
 
