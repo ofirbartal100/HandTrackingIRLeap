@@ -1,3 +1,24 @@
+#include <igl/opengl/gl.h>
+#include <igl/arap.h>
+#include <igl/biharmonic_coordinates.h>
+#include <igl/cat.h>
+#include <igl/cotmatrix.h>
+#include <igl/massmatrix.h>
+#include <igl/matrix_to_list.h>
+#include <igl/parula.h>
+#include <igl/point_mesh_squared_distance.h>
+#include <igl/readDMAT.h>
+#include <igl/readMESH.h>
+#include <igl/remove_unreferenced.h>
+#include <igl/slice.h>
+#include <igl/writeDMAT.h>
+#include <igl/opengl/glfw/Viewer.h>
+#include <Eigen/Sparse>
+#include <Eigen/SparseQR>
+#include <Eigen/OrderingMethods>
+#include <iostream>
+#include <queue>
+
 #include "opencv2/core/cvstd_wrapper.hpp"
 #include "opencv2/tracking.hpp"
 #include "opencv2/videoio.hpp"
@@ -9,7 +30,10 @@
 #include <igl/opengl/glfw/Viewer.h>
 #include <igl/triangle/triangulate.h>
 #include <igl/harmonic.h>
-
+#include <igl/grad.h>
+#include <igl/biharmonic_coordinates.h>
+#include <Eigen/SparseQR>
+#include <Eigen/OrderingMethods>
 
 #define NOMINMAX
 #include <igl/boundary_conditions.h>
@@ -37,6 +61,110 @@
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 
+
+
+struct Mesh
+{
+    Eigen::MatrixXd V, U;
+    Eigen::MatrixXi T, F;
+}  scene;
+
+Eigen::MatrixXd W;
+igl::ARAPData arap_data;
+
+
+void LaplacianDeformationOperator(Eigen::MatrixXd& Vertices, Eigen::MatrixXi& Triangles, Eigen::MatrixXd& constraint_vertex_values, std::vector<int>& constraint_vertex_indexes)
+{
+    using namespace Eigen;
+    SparseMatrix<double> laplacian;
+    // Compute Laplace-Beltrami operator: #V by #V
+    igl::cotmatrix(Vertices, Triangles, laplacian);
+
+    int num_of_vertices = Vertices.rows();
+    MatrixXd  delta_coordinates, delta_coordinates_with_constraints;
+    delta_coordinates = laplacian * Vertices;
+
+    SparseMatrix<double> constraint_vertex_indexes_sparse, laplacian_with_constraints;
+
+    constraint_vertex_indexes_sparse.resize(constraint_vertex_values.rows(), num_of_vertices); //3D
+    std::vector<Triplet<double> > ijv;
+    for (int i = 0; i < constraint_vertex_indexes.size(); i++)
+    {
+        ijv.push_back(Triplet<double>(i, constraint_vertex_indexes[i], 1));
+    }
+    constraint_vertex_indexes_sparse.setFromTriplets(ijv.begin(), ijv.end());
+
+    igl::cat(1, laplacian, constraint_vertex_indexes_sparse, laplacian_with_constraints);
+    igl::cat(1, delta_coordinates, constraint_vertex_values, delta_coordinates_with_constraints);
+
+    // Solve (L+C) U` = delta+C
+    //auto solver = LC.bdcSvd(ComputeThinU | ComputeThinV);
+    SparseQR<SparseMatrix<double>, COLAMDOrdering<int>> solver;
+    solver.compute(laplacian_with_constraints);
+    auto least_squares_x = solver.solve(delta_coordinates_with_constraints.col(0));
+    auto least_squares_y = solver.solve(delta_coordinates_with_constraints.col(1));
+    Vertices.col(0) << MatrixXd(least_squares_x);
+    Vertices.col(1) << MatrixXd(least_squares_y);
+}
+//
+//int main(int argc, char * argv[])
+//{
+//    using namespace Eigen;
+//    using namespace std;
+//    using namespace igl;
+//
+//    // read the mesh, if the code is prepared outside of tutorial, the TUTORIAL_SHARED_PATH
+//    // should be the data folder
+//    scene.V.resize(9, 2);
+//    scene.T.resize(8, 3);
+//    scene.F.resize(16, 2);
+//
+//    scene.V << 0, 0, 1, 0, 2, 0, 2, 1, 2, 2, 1, 2, 0, 2, 0, 1, 1, 1;
+//    scene.T << 0, 1, 8, 0, 8, 7, 1, 2, 3, 1, 3, 8, 8, 3, 4, 8, 4, 5, 5, 7, 8, 5, 6, 7;
+//    scene.F << 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 5, 8, 3, 8, 1, 0, 8, 1, 3, 8, 4, 7, 5, 7, 0;
+//    scene.U = scene.V;
+//    igl::opengl::glfw::Viewer viewer;
+//
+//
+//
+//    const auto &key_down = [](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
+//    {
+//        switch (key)
+//        {
+//        case 'r':
+//        case 'R':
+//            scene.U = scene.V;
+//            break;
+//        case ' ':
+//        {
+//            Eigen::MatrixXd constraints_point;
+//            constraints_point.resize(2, 2);
+//            constraints_point << -1, -1, 3, 3;
+//
+//            std::vector<int> indexes;
+//            indexes.push_back(0);
+//            indexes.push_back(4);
+//
+//            LaplacianDeformationOperator(scene.U, scene.T, constraints_point, indexes);
+//
+//            break;
+//        }
+//        default:
+//            return false;
+//        }
+//        // Send new positions, update normals, recenter
+//        viewer.data().set_mesh(scene.U, scene.T);
+//        return true;
+//    };
+//
+//
+//    viewer.data().set_mesh(scene.U, scene.T);
+//    viewer.callback_key_down = key_down;
+//    viewer.core.rotation_type = igl::opengl::ViewerCore::ROTATION_TYPE_TWO_AXIS_VALUATOR_FIXED_UP;
+//    viewer.launch();
+//
+//   
+//}
 
 
 typedef
@@ -67,7 +195,7 @@ enum ModeType
 };
 
 ModeType mode = MODE_TYPE_ARAP;
-
+#define EXTREME_VERBOSE
 bool pre_draw(igl::opengl::glfw::Viewer & viewer)
 {
     using namespace Eigen;
@@ -75,8 +203,8 @@ bool pre_draw(igl::opengl::glfw::Viewer & viewer)
     if (resolve)
     {
         MatrixXd bc(b.size(), V.cols());
-        //VectorXd Beq(3 * b.size());
-        VectorXd Beq(2 * b.size());
+        VectorXd Beq(3 * b.size());
+        //VectorXd Beq(2 * b.size());
         for (int i = 0; i < b.size(); i++)
         {
             bc.row(i) = V.row(b(i));
@@ -88,25 +216,24 @@ bool pre_draw(igl::opengl::glfw::Viewer & viewer)
                 break;
             case 1:
                 bc(i, 1) += 0.10*bbd*sin(1.5*anim_t*(i + 1));
-                //bc(i, 2) += 0.10*bbd*(1. - cos(1.*anim_t*(i + 1)));
+                bc(i, 2) += 0.10*bbd*(1. - cos(1.*anim_t*(i + 1)));
                 break;
             case 0:
                 bc(i, 0) += 0.20*bbd*sin(4.*anim_t*(i + 1));
                 break;
             }
-            /*Beq(3 * i + 0) = bc(i, 0);
+            Beq(3 * i + 0) = bc(i, 0);
             Beq(3 * i + 1) = bc(i, 1);
-            Beq(3 * i + 2) = bc(i, 2);*/
-            Beq(2 * i + 0) = bc(i, 0);
-            Beq(2 * i + 1) = bc(i, 1);
+            Beq(3 * i + 2) = bc(i, 2);
         }
 
         VectorXd L0 = L;
-        arap_dof_update(arap_dof_data, Beq, L0, 30, 0, L);
+        arap_dof_update(arap_dof_data, Beq, L0, 30, 10, L);
+
         const auto & Ucol = M * L;
         U.col(0) = Ucol.block(0 * U.rows(), 0, U.rows(), 1);
         U.col(1) = Ucol.block(1 * U.rows(), 0, U.rows(), 1);
-        //U.col(2) = Ucol.block(2 * U.rows(), 0, U.rows(), 1);
+        U.col(2) = Ucol.block(2 * U.rows(), 0, U.rows(), 1);
 
 
         viewer.data().set_vertices(U);
@@ -194,15 +321,15 @@ vector<cv::Point_<int>> extract_contour_from_image(char* path)
     drawContours(drawing, contours, max_area_contour_index, color, 2, LINE_8, hierarchy, 0);
 
 #ifdef VERBOSE
-     imshow("raw", raw);
-     imshow("src", src);
-     waitKey(0);
+    imshow("raw", raw);
+    imshow("src", src);
+    waitKey(0);
 #endif
 
     return contours[max_area_contour_index];
 }
 
-void triangulate_contour(vector<cv::Point_<int>> input_contour, Eigen::MatrixXd input_control_points,  Eigen::MatrixXd& output_vertices, Eigen::MatrixXi& output_edges)
+void triangulate_contour(vector<cv::Point_<int>> input_contour, Eigen::MatrixXd input_control_points, Eigen::MatrixXd& output_vertices, Eigen::MatrixXi& output_edges)
 {
     int input_contour_size = input_contour.size();
     // Input polygon
@@ -211,13 +338,13 @@ void triangulate_contour(vector<cv::Point_<int>> input_contour, Eigen::MatrixXd 
     Eigen::MatrixXd input_holes;
 
     // Create the boundary of a square
-    
+
     input_vertices.resize(input_contour_size + 21, 2);
     input_edges.resize(input_contour_size, 2);
 
     for (size_t i = 0; i < input_contour_size; i++)
     {
-        input_vertices.row(i) << input_contour[i].x, input_contour[i].y;// , 0;
+        input_vertices.row(i) << input_contour[i].x, input_contour[i].y;
         input_edges.row(i) << i, i + 1;
     }
     input_edges.row(input_contour_size - 1) << input_contour_size - 1, 0;
@@ -229,15 +356,25 @@ void triangulate_contour(vector<cv::Point_<int>> input_contour, Eigen::MatrixXd 
     }
     /*imshow("Contours", drawing);
     waitKey(0);*/
-  
+
     // Triangulate the interior
     // a0.005 means that the area of each triangle should
     // not be greater than 0.005
     // q means that no angles will be smaller than 20 degrees
     // for a detailed set of commands please refer to:
     // https://www.cs.cmu.edu/~quake/triangle.switch.html
+
     igl::triangle::triangulate(input_vertices, input_edges, input_holes, "a100q", output_vertices, output_edges);
 
+    /*int triangles_count = E_out.rows();
+    output_edges.resize(triangles_count*3, 2);
+    for (size_t i =0;i< triangles_count;i++)
+    {
+        auto tt = E_out.row(i);
+        output_edges.row(3 * i) << tt[0], tt[1];
+        output_edges.row(3 * i + 1) << tt[1], tt[2];
+        output_edges.row(3 * i + 2) << tt[2], tt[0];
+    }*/
 
     // Plot the mesh with pseudocolors
   /* igl::opengl::glfw::Viewer viewer;
@@ -246,18 +383,19 @@ void triangulate_contour(vector<cv::Point_<int>> input_contour, Eigen::MatrixXd 
    viewer.launch();*/
 }
 
-void calculate_2d_mesh_bbw(Eigen::MatrixXd boundry_vertices_weights, Eigen::MatrixXi input_bone_edges, Eigen::MatrixXd input_bone_points, Eigen::MatrixXd input_vertices, Eigen::MatrixXi input_edges, VectorXi& boundry_indecies , Eigen::MatrixXd& output_bbw)
-{
-    bool res = igl::boundary_conditions(input_vertices, input_edges, input_bone_points, VectorXi(), input_bone_edges, MatrixXi(), boundry_indecies, boundry_vertices_weights);
-    cout << res << endl << boundry_vertices_weights << endl;
-    // compute BBW weights matrix
-    igl::BBWData bbw_data;
-    // only a few iterations for sake of demo
-    bbw_data.active_set_params.max_iter = 50;
-    bbw_data.verbosity = 2;
-    res = igl::bbw(input_vertices, input_edges, boundry_indecies, boundry_vertices_weights, bbw_data, output_bbw);
-    cout << res << endl << output_bbw.size() << endl;
-}
+//void calculate_2d_mesh_bbw(Eigen::MatrixXd input_bone_points, Eigen::MatrixXi input_bone_edges, Eigen::MatrixXd input_vertices, Eigen::MatrixXi input_edges, VectorXi& boundry_indecies, Eigen::MatrixXd& output_bbw)
+//{
+//    Eigen::MatrixXd boundry_vertices_weights;
+//    bool res = igl::boundary_conditions(input_vertices, input_edges, input_bone_points, VectorXi(), input_bone_edges, MatrixXi(), boundry_indecies, boundry_vertices_weights);
+//    cout << res << endl << boundry_vertices_weights << endl;
+//    // compute BBW weights matrix
+//    igl::BBWData bbw_data;
+//    // only a few iterations for sake of demo
+//    bbw_data.active_set_params.max_iter = 50;
+//    bbw_data.verbosity = 2;
+//    res = igl::bbw(input_vertices, input_edges, boundry_indecies, boundry_vertices_weights, bbw_data, output_bbw);
+//    cout << res << endl << output_bbw.size() << endl;
+//}
 
 void skeleton_inputs(Eigen::MatrixXi& BE, Eigen::MatrixXd& control_points)
 {
@@ -278,114 +416,221 @@ void skeleton_inputs(Eigen::MatrixXi& BE, Eigen::MatrixXd& control_points)
         530, 445, //0, //middle 10 
         531, 496, //0, //middle 11
         532, 541 - 9, //0, //middle 12 
-        489, 358,// 0, //ring 13
-        474, 430,// 0, //ring 14
-        466, 475,// 0, //ring 15
-        458, 522 - 9,// 0, //ring 16
-        450, 349,// 0, //pinky 17 
-        423, 404,// 0,//pinky 18
-        410, 436,// 0, //pinky 19
-        396, 474 - 9,// 0; //pinky 20
+        489, 358, //0, //ring 13
+        474, 430, //0, //ring 14
+        466, 475, //0, //ring 15
+        458, 522 - 9, //0, //ring 16
+        450, 349, //0, //pinky 17 
+        423, 404, //0,//pinky 18
+        410, 436, //0, //pinky 19
+        396, 474 - 9; //0; //pinky 20
 
-        BE << 0, 1, 1, 2, 2, 3, 3, 4,
+    BE << 0, 1, 1, 2, 2, 3, 3, 4,
         0, 5, 5, 6, 6, 7, 7, 8,
         0, 9, 9, 10, 10, 11, 11, 12,
         0, 13, 13, 14, 14, 15, 15, 16,
         0, 17, 17, 18, 18, 19, 19, 20; //skeleton connectivity
 }
+//
+//void to3D(Eigen::MatrixXd& input_2d_vertices, Eigen::MatrixXi& input_2d_triangles, vector<cv::Point_<int>> input_contour, Eigen::MatrixXd& output_vertices, Eigen::MatrixXi& output_triangles)
+//{
+//    int vrows = input_2d_vertices.rows();
+//    output_vertices.resize(vrows * 2, 3);
+//
+//    for (size_t i = 0; i < vrows; i++)
+//    {
+//        output_vertices.row(i) << input_2d_vertices.row(i), -1;
+//        output_vertices.row(vrows + i) << input_2d_vertices.row(i), 1;
+//    }
+//
+//    int erows = input_2d_triangles.rows();
+//    int crows = input_contour.size();
+//
+//    output_triangles.resize(erows * 2 + 2 * crows, 3);
+//
+//    //the contour points are first in the list
+//    for (size_t i = 0; i < crows; i++)
+//    {
+//        output_triangles.row(2 * i) << i, (i + 1) % crows, i + vrows; //top triangle
+//        output_triangles.row(2 * i + 1) << (i + 1) % crows, (i + 1) % crows + vrows, i + vrows; //bottom triangle
+//    }
+//
+//    for (size_t i = 0; i < erows; i++)
+//    {
+//        output_triangles.row(i + 2 * crows) << input_2d_triangles.row(i);
+//        output_triangles.row(erows + i + 2 * crows) << input_2d_triangles.row(i)[0] + vrows, input_2d_triangles.row(i)[1] + vrows, input_2d_triangles.row(i)[2] + vrows;
+//    }
+//
+//
+//}
 
+Eigen::MatrixXd V2D, U2D;
+Eigen::MatrixXi F2D;
+Eigen::SparseMatrix<double> L2D;
+igl::opengl::glfw::Viewer viewer;
+int len_contour;
 int main(int argc, char *argv[])
 {
     vector<cv::Point_<int>> contour = extract_contour_from_image("C:\\Users\\ofir\\Desktop\\leap_hand_example_full_res.PNG");
 
     Eigen::MatrixXi BE;
-    Eigen::VectorXi bi;
-    Eigen::MatrixXd control_points;
-    Eigen::MatrixXd V;
-    Eigen::MatrixXd U;
-    Eigen::MatrixXi F;
+    Eigen::VectorXi bi, S;
+    Eigen::MatrixXd control_points, W;
+    Eigen::MatrixXd control_points3D, delta, dp, constraints_point;
+    /* Eigen::MatrixXd V2D;
+     Eigen::SparseMatrix<double> L2D;*/
+     //Eigen::MatrixXd V;
+     //Eigen::MatrixXd U;
+    Eigen::MatrixXi F/*, F2D*/;
 
     skeleton_inputs(BE, control_points);
+    triangulate_contour(contour, control_points, V2D, F2D);
+    len_contour = (int)contour.size();
+    //// Recompute just mass matrix on each step
+    //SparseMatrix<double> M;
+    //igl::massmatrix(V2D, F2D, igl::MASSMATRIX_TYPE_BARYCENTRIC, M);
 
-    triangulate_contour(contour, control_points, V, F);
 
-    Eigen::MatrixXd W;
-    calculate_2d_mesh_bbw(control_points, BE, control_points, V, F,b,W);
 
-    /* igl::readOBJ("C:\\Users\\ofir\\Desktop\\libigl\\tutorial\\data\\armadillo.obj", V, F);
-    U = V;
-    igl::readDMAT("C:\\Users\\ofir\\Desktop\\libigl\\tutorial\\data\\armadillo-weights.dmat", W);
-    ofstream myfile;
-    myfile.open("dmat.txt");
-    myfile << W << endl;*/
-
-    U = V; // probably for updates..
-    igl::lbs_matrix_column(V, W, M);
-
-    // Cluster according to weights
-    VectorXi G;
+    const auto &key_down = [](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
     {
-        VectorXi S;
-        VectorXd D;
-        igl::partition(W, 21, G, S, D);
-        //igl::partition(W, 50, G, S, D);
-    }
+        switch (key)
+        {
+        case 'r':
+        case 'R':
+            U = V2D;
+            break;
+        case ' ':
+        {
+            int num_of_vertices = U.rows();
 
-    //// vertices corresponding to handles (those with maximum weight)
+            std::vector<int> indexes;
+            Eigen::MatrixXd constraints_point;
+            constraints_point.resize(21, 2);
+            for(int i=0;i<21;i++)
+            {
+                indexes.push_back(len_contour + i);
+                constraints_point.row(i) << U.row(len_contour + i);
+            }
+
+            std::cout << "constraints_point: \n" << constraints_point << endl;
+            constraints_point.row(8) << U.row(indexes[8])[0] - 15, U.row(indexes[8])[1];
+            constraints_point.row(12) << U.row(indexes[12])[0] + 15, U.row(indexes[12])[1];
+            std::cout << "constraints_point: \n" << constraints_point << endl;
+
+            LaplacianDeformationOperator(U, F2D, constraints_point, indexes);
+
+            break;
+        }
+        default:
+            return false;
+        }
+        // Send new positions, update normals, recenter
+        viewer.data().set_mesh(U, F2D);
+        return true;
+    };
+
+
+    // Initialize smoothing with base mesh
+    U = V2D;
+    viewer.data().set_mesh(U, F2D);
+    viewer.callback_key_down = key_down;
+
+    std::cout << "Press [space] to smooth." << endl;;
+    std::cout << "Press [r] to reset." << endl;;
+    return viewer.launch();
+
+
+
+    //cout << F2D.row(0) << endl;
+    ///*to3D(V2D, F2D, contour, V, F);
+
+
+    //int cprows = control_points.rows();
+    //control_points3D.resize(cprows, 3);
+    //for (size_t i = 0; i < cprows; i++)
     //{
-    //    VectorXd maxW;
-    //    igl::mat_max(W, 1, maxW, b);
+    //    control_points3D.row(i) << control_points.row(i)[0], control_points.row(i)[1], 0;
     //}
 
-    // Precomputation for FAST
-    std::cout << "Initializing Fast Automatic Skinning Transformations..." << endl;
-    // number of weights
-    const int m = W.cols();
-    //Aeq.resize(m * 3, m * 3 * (3 + 1));
-    Aeq.resize(m * 2, m * 2 * (2 + 1));
-    vector<Triplet<double> > ijv;
-    for (int i = 0; i < m; i++)
-    {
-        RowVector3d homo;
-        //RowVector4d homo;
-        homo << V.row(b(i)), 1.;
-        //for (int d = 0; d < 3; d++)
-        for (int d = 0; d < 2; d++)
-        {
-            //for (int c = 0; c < (3 + 1); c++)
-            for (int c = 0; c < (2 + 1); c++)
-            {
-                ijv.push_back(Triplet<double>(3 * i + d, i + c * m * 3 + d * m, homo(c)));
-            }
-        }
-    }
-    Aeq.setFromTriplets(ijv.begin(), ijv.end());
-    igl::arap_dof_precomputation(V, F, M, G, arap_dof_data);
-    igl::arap_dof_recomputation(VectorXi(), Aeq, arap_dof_data);
-    // Initialize
-    //MatrixXd Istack = MatrixXd::Identity(3, 3 + 1).replicate(1, m);
-    MatrixXd Istack = MatrixXd::Identity(2, 2 + 1).replicate(1, m);
-    igl::columnize(Istack, m, 2, L);
+    //Eigen::MatrixXd W;
+    //calculate_2d_mesh_bbw(control_points3D, BE, V, F, b, W);*/
+
+    ///* igl::readOBJ("C:\\Users\\ofir\\Desktop\\libigl\\tutorial\\data\\armadillo.obj", V, F);
+    //U = V;
+    //igl::readDMAT("C:\\Users\\ofir\\Desktop\\libigl\\tutorial\\data\\armadillo-weights.dmat", W);
+    //ofstream myfile;
+    //myfile.open("dmat.txt");
+    //myfile << W << endl;*/
+
+    //U = V; // probably for updates..
+    //igl::lbs_matrix_column(V, W, M);
+
+    //// Cluster according to weights
+    //VectorXi G;
+    //{
+    //    VectorXi S;
+    //    VectorXd D;
+    //    igl::partition(W, 21, G, S, D);
+    //    //igl::partition(W, 50, G, S, D);
+    //}
+
+    ////// vertices corresponding to handles (those with maximum weight)
+    ////{
+    ////    VectorXd maxW;
+    ////    igl::mat_max(W, 1, maxW, b);
+    ////}
+
+    //// Precomputation for FAST
+    //std::cout << "Initializing Fast Automatic Skinning Transformations..." << endl;
+    //// number of weights
+    //const int m = W.cols();
+    //Aeq.resize(m * 3, m * 3 * (3 + 1)); //3D
+    ////Aeq.resize(m * 2, m * 2 * (2 + 1));
+    //vector<Triplet<double> > ijv;
+    //for (int i = 0; i < m; i++)
+    //{
+    //    //RowVector3d homo;
+    //    RowVector4d homo;
+    //    homo << V.row(b(i)), 1.;
+    //    for (int d = 0; d < 3; d++)
+    //        //for (int d = 0; d < 2; d++)
+    //    {
+    //        for (int c = 0; c < (3 + 1); c++)
+    //            //for (int c = 0; c < (2 + 1); c++)
+    //        {
+    //            ijv.push_back(Triplet<double>(3 * i + d, i + c * m * 3 + d * m, homo(c)));
+    //            //ijv.push_back(Triplet<double>(2 * i + d, i + c * m * 2 + d * m, homo(c)));
+    //        }
+    //    }
+    //}
+    //Aeq.setFromTriplets(ijv.begin(), ijv.end());
+    //igl::arap_dof_precomputation(V, F, M, G, arap_dof_data);
+    //igl::arap_dof_recomputation(VectorXi(), Aeq, arap_dof_data);
+    //// Initialize
+    //MatrixXd Istack = MatrixXd::Identity(3, 3 + 1).replicate(1, m); //3D
+    ////MatrixXd Istack = MatrixXd::Identity(2, 2 + 1).replicate(1, m);
+    //igl::columnize(Istack, m, 2, L);
 
 
-    // bounding box diagonal
-    bbd = (V.colwise().maxCoeff() - V.colwise().minCoeff()).norm();
+    //// bounding box diagonal
+    //bbd = (V.colwise().maxCoeff() - V.colwise().minCoeff()).norm();
 
-    // Plot the mesh with pseudocolors
-    igl::opengl::glfw::Viewer viewer;
-    viewer.data().set_mesh(U, F);
-    //viewer.data().add_points(igl::slice(V, b, 1), sea_green);
-    //viewer.data().show_lines = false;
-    viewer.callback_pre_draw = &pre_draw;
-    viewer.callback_key_down = &key_down;
-    viewer.core.is_animating = false;
-    viewer.core.animation_max_fps = 30.;
-    std::cout <<
-        "Press [space] to toggle animation." << endl <<
-        "Press '0' to reset pose." << endl <<
-        "Press '.' to switch to next deformation method." << endl <<
-        "Press ',' to switch to previous deformation method." << endl;
-    viewer.launch();
+    //// Plot the mesh with pseudocolors
+    //igl::opengl::glfw::Viewer viewer;
+    //viewer.data().set_mesh(U, F);
+    ////viewer.data().add_points(igl::slice(V, b, 1), sea_green);
+    ////viewer.data().show_lines = false;
+    //viewer.callback_pre_draw = &pre_draw;
+    //viewer.callback_key_down = &key_down;
+    //viewer.core.is_animating = false;
+    //viewer.core.animation_max_fps = 30.;
+    //std::cout <<
+    //    "Press [space] to toggle animation." << endl <<
+    //    "Press '0' to reset pose." << endl <<
+    //    "Press '.' to switch to next deformation method." << endl <<
+    //    "Press ',' to switch to previous deformation method." << endl;
+    //viewer.launch();
 }
 
 
@@ -443,7 +688,7 @@ int main(int argc, char *argv[])
 //  E.resize(contour_size , 2);
 //
 //  control_points <<
-//      528, 182, //0, //palm 0
+//      528, 182, 0, //palm 0
 //      571, 205, //0, //thumb 1
 //      622, 311, //0, //thumb 2
 //      653, 357, //0, //thumb 3
@@ -560,136 +805,137 @@ int main(int argc, char *argv[])
 //#pragma endregion
 //
 
+
 #define VERBOSE
-
-int trian()
-{
-    using namespace cv;
-    Mat raw = imread("C:\\Users\\ofir\\Desktop\\leap_hand_example_full_res.PNG");
-    Mat src;
-    flip(raw, src, 0);
-    int r = 3 * 16 + 2, g = 4 * 16 + 10, b = 8 * 16 + 7;
-    Mat binary_image = abs(src - Scalar(b, g, r));
-    Mat src_gray;
-    cvtColor(binary_image, src_gray, COLOR_BGR2GRAY);
-    Mat canny_output;
-    threshold(src_gray, canny_output, 1, 255, CV_THRESH_BINARY);
-    vector<vector<Point> > contours;
-    vector<Vec4i> hierarchy;
-    findContours(canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
-    Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
-    //Scalar color = Scalar(rng.uniform(0, 256), rng.uniform(0, 256), rng.uniform(0, 256));
-    Scalar color = Scalar(166, 12, 89);
-    int max_area_contour_index = getMaxAreaContourId(contours);
-    drawContours(drawing, contours, max_area_contour_index, color, 2, LINE_8, hierarchy, 0);
-
-
-    auto contour = contours[max_area_contour_index];
-    int contour_size = contour.size();
-    /* imshow("raw", raw);
-     waitKey(0);
-     imshow("src", src);
-     waitKey(0);*/
-
-
-
-     // Input polygon
-    Eigen::MatrixXd V, bc, W;
-    Eigen::MatrixXi E, BE;
-    VectorXi bi;
-    Eigen::MatrixXd H;
-    Eigen::MatrixXd control_points;
-    Eigen::MatrixXi control_points_index;
-
-    // Triangulated interior
-    Eigen::MatrixXd V2, U;
-    Eigen::MatrixXi F2;
-
-    // Create the boundary of a square
-    control_points.resize(21, 2);
-    BE.resize(20, 2);
-    control_points_index.resize(21, 1);
-    V.resize(contour_size + 21, 2);
-    E.resize(contour_size, 2);
-
-    control_points <<
-        528, 182, //0, //palm 0
-        571, 205, //0, //thumb 1
-        622, 311, //0, //thumb 2
-        653, 357, //0, //thumb 3
-        679, 414 - 8, //0, //thumb 4
-        575, 362, //0, //index 5
-        587, 441, //0, //index 6 
-        594, 488, //0, //index 7 
-        600, 529 - 5, //0, //index 8 
-        531, 361, //0, //middle 9 
-        530, 445, //0, //middle 10 
-        531, 496, //0, //middle 11
-        532, 541 - 9, //0, //middle 12 
-        489, 358,// 0, //ring 13
-        474, 430,// 0, //ring 14
-        466, 475,// 0, //ring 15
-        458, 522 - 9,// 0, //ring 16
-        450, 349,// 0, //pinky 17 
-        423, 404,// 0,//pinky 18
-        410, 436,// 0, //pinky 19
-        396, 474 - 9,// 0; //pinky 20
-
-        BE << 0, 1, 1, 2, 2, 3, 3, 4,
-        0, 5, 5, 6, 6, 7, 7, 8,
-        0, 9, 9, 10, 10, 11, 11, 12,
-        0, 13, 13, 14, 14, 15, 15, 16,
-        0, 17, 17, 18, 18, 19, 19, 20; //skeleton connectivity
-
-    for (size_t i = 0; i < contour_size; i++)
-    {
-        V.row(i) << contour[i].x, contour[i].y;// , 0;
-        E.row(i) << i, i + 1;
-    }
-    E.row(contour_size - 1) << contour_size - 1, 0;
-
-    for (size_t i = contour_size; i < contour_size + 21; i++)
-    {
-        V.row(i) << control_points.row(i - contour_size);
-        //E.row(i) << i, i;
-        control_points_index.row(i - contour_size) << i;
-
-        circle(drawing, Point(V.row(i)[0], V.row(i)[1]), 3, Scalar(0, 255, 25), -1);
-    }
-    imshow("Contours", drawing);
-    waitKey(0);
-    //V.row(contour.size()-1) << contour[contour.size() - 1].x, contour[contour.size() - 1].y;
-    /*control_points_moved << V.row(0) + RowVector3d(0, 50, 0);*/
-
-
-    // Triangulate the interior
-    // a0.005 means that the area of each triangle should
-    // not be greater than 0.005
-    // q means that no angles will be smaller than 20 degrees
-    // for a detailed set of commands please refer to:
-    // https://www.cs.cmu.edu/~quake/triangle.switch.html
-
-
-    igl::triangle::triangulate(V, E, H, "a100q", V2, F2);
-
-    // Plot the mesh with pseudocolors
-    igl::opengl::glfw::Viewer viewer;
-    viewer.data().set_mesh(V2, F2);
-    viewer.data().add_points(control_points, sea_green);
-    viewer.launch();
-    //return 0;
-    bool res = igl::boundary_conditions(V2, F2, control_points, VectorXi(), BE, MatrixXi(), bi, bc);
-    cout << res << endl << bc << endl;
-    // compute BBW weights matrix
-    igl::BBWData bbw_data;
-    // only a few iterations for sake of demo
-    bbw_data.active_set_params.max_iter = 50;
-    bbw_data.verbosity = 2;
-    if (!igl::bbw(V2, F2, bi, bc, bbw_data, W))
-        //if (!igl::bbw(TV, TT, bi, bc, bbw_data, W))
-    {
-        return EXIT_FAILURE;
-    }
-
-    return 0;
-}
+//
+//int trian()
+//{
+//    using namespace cv;
+//    Mat raw = imread("C:\\Users\\ofir\\Desktop\\leap_hand_example_full_res.PNG");
+//    Mat src;
+//    flip(raw, src, 0);
+//    int r = 3 * 16 + 2, g = 4 * 16 + 10, b = 8 * 16 + 7;
+//    Mat binary_image = abs(src - Scalar(b, g, r));
+//    Mat src_gray;
+//    cvtColor(binary_image, src_gray, COLOR_BGR2GRAY);
+//    Mat canny_output;
+//    threshold(src_gray, canny_output, 1, 255, CV_THRESH_BINARY);
+//    vector<vector<Point> > contours;
+//    vector<Vec4i> hierarchy;
+//    findContours(canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+//    Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
+//    //Scalar color = Scalar(rng.uniform(0, 256), rng.uniform(0, 256), rng.uniform(0, 256));
+//    Scalar color = Scalar(166, 12, 89);
+//    int max_area_contour_index = getMaxAreaContourId(contours);
+//    drawContours(drawing, contours, max_area_contour_index, color, 2, LINE_8, hierarchy, 0);
+//
+//
+//    auto contour = contours[max_area_contour_index];
+//    int contour_size = contour.size();
+//    /* imshow("raw", raw);
+//     waitKey(0);
+//     imshow("src", src);
+//     waitKey(0);*/
+//
+//
+//
+//     // Input polygon
+//    Eigen::MatrixXd V, bc, W;
+//    Eigen::MatrixXi E, BE;
+//    VectorXi bi;
+//    Eigen::MatrixXd H;
+//    Eigen::MatrixXd control_points;
+//    Eigen::MatrixXi control_points_index;
+//
+//    // Triangulated interior
+//    Eigen::MatrixXd V2, U;
+//    Eigen::MatrixXi F2;
+//
+//    // Create the boundary of a square
+//    control_points.resize(21, 2);
+//    BE.resize(20, 2);
+//    control_points_index.resize(21, 1);
+//    V.resize(contour_size + 21, 2);
+//    E.resize(contour_size, 2);
+//
+//    control_points <<
+//        528, 182, //0, //palm 0
+//        571, 205, //0, //thumb 1
+//        622, 311, //0, //thumb 2
+//        653, 357, //0, //thumb 3
+//        679, 414 - 8, //0, //thumb 4
+//        575, 362, //0, //index 5
+//        587, 441, //0, //index 6 
+//        594, 488, //0, //index 7 
+//        600, 529 - 5, //0, //index 8 
+//        531, 361, //0, //middle 9 
+//        530, 445, //0, //middle 10 
+//        531, 496, //0, //middle 11
+//        532, 541 - 9, //0, //middle 12 
+//        489, 358,// 0, //ring 13
+//        474, 430,// 0, //ring 14
+//        466, 475,// 0, //ring 15
+//        458, 522 - 9,// 0, //ring 16
+//        450, 349,// 0, //pinky 17 
+//        423, 404,// 0,//pinky 18
+//        410, 436,// 0, //pinky 19
+//        396, 474 - 9,// 0; //pinky 20
+//
+//        BE << 0, 1, 1, 2, 2, 3, 3, 4,
+//        0, 5, 5, 6, 6, 7, 7, 8,
+//        0, 9, 9, 10, 10, 11, 11, 12,
+//        0, 13, 13, 14, 14, 15, 15, 16,
+//        0, 17, 17, 18, 18, 19, 19, 20; //skeleton connectivity
+//
+//    for (size_t i = 0; i < contour_size; i++)
+//    {
+//        V.row(i) << contour[i].x, contour[i].y;// , 0;
+//        E.row(i) << i, i + 1;
+//    }
+//    E.row(contour_size - 1) << contour_size - 1, 0;
+//
+//    for (size_t i = contour_size; i < contour_size + 21; i++)
+//    {
+//        V.row(i) << control_points.row(i - contour_size);
+//        //E.row(i) << i, i;
+//        control_points_index.row(i - contour_size) << i;
+//
+//        circle(drawing, Point(V.row(i)[0], V.row(i)[1]), 3, Scalar(0, 255, 25), -1);
+//    }
+//    imshow("Contours", drawing);
+//    waitKey(0);
+//    //V.row(contour.size()-1) << contour[contour.size() - 1].x, contour[contour.size() - 1].y;
+//    /*control_points_moved << V.row(0) + RowVector3d(0, 50, 0);*/
+//
+//
+//    // Triangulate the interior
+//    // a0.005 means that the area of each triangle should
+//    // not be greater than 0.005
+//    // q means that no angles will be smaller than 20 degrees
+//    // for a detailed set of commands please refer to:
+//    // https://www.cs.cmu.edu/~quake/triangle.switch.html
+//
+//
+//    igl::triangle::triangulate(V, E, H, "a100q", V2, F2);
+//
+//    // Plot the mesh with pseudocolors
+//    igl::opengl::glfw::Viewer viewer;
+//    viewer.data().set_mesh(V2, F2);
+//    viewer.data().add_points(control_points, sea_green);
+//    viewer.launch();
+//    //return 0;
+//    bool res = igl::boundary_conditions(V2, F2, control_points, VectorXi(), BE, MatrixXi(), bi, bc);
+//    cout << res << endl << bc << endl;
+//    // compute BBW weights matrix
+//    igl::BBWData bbw_data;
+//    // only a few iterations for sake of demo
+//    bbw_data.active_set_params.max_iter = 50;
+//    bbw_data.verbosity = 2;
+//    if (!igl::bbw(V2, F2, bi, bc, bbw_data, W))
+//        //if (!igl::bbw(TV, TT, bi, bc, bbw_data, W))
+//    {
+//        return EXIT_FAILURE;
+//    }
+//
+//    return 0;
+//}

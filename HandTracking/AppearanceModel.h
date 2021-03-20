@@ -25,7 +25,8 @@ public:
     {
         try {
             // Deserialize the ScriptModule from a file using torch::jit::load().
-            fanet = torch::jit::load("D:\\TAU\\Research\\Checkpoints\\traced_appearance_model.pt");
+            //fanet = torch::jit::load("D:\\TAU\\Research\\Checkpoints\\traced_appearance_model.pt");
+            fanet = torch::jit::load("C:\\Users\\ofir\\Desktop\\appearance_model_traced.pt");
         }
         catch (const c10::Error& e) {
             cerr << "error loading the model\n";

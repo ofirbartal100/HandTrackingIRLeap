@@ -33,12 +33,12 @@ using namespace std::chrono;
 
 using namespace std;
 
-int main(int argc, char **argv)
+int main_mr(int argc, char **argv)
 {
     ////model init
     //AppearanceModel appearanceModelTest;
     //cv::Mat f = cv::imread("C:\\Users\\ofir\\Desktop\\dad.png");
-    vector<cv::Point2f> r{
+    /*vector<cv::Point2f> r{
     cv::Point2f(539,368),
     cv::Point2f(532,319),
     cv::Point2f(488,283),
@@ -60,6 +60,30 @@ int main(int argc, char **argv)
     cv::Point2f(383,349),
     cv::Point2f(357,338),
     cv::Point2f(321,316),
+    };*/
+
+    vector<cv::Point2f> r{
+    cv::Point2f(515,313),
+    cv::Point2f(502,277),
+    cv::Point2f(468,243),
+    cv::Point2f(447,225),
+    cv::Point2f(429,201),
+    cv::Point2f(407,264),
+    cv::Point2f(376,252),
+    cv::Point2f(355,244),
+    cv::Point2f(334,241),
+    cv::Point2f(397,286),
+    cv::Point2f(362,279),
+    cv::Point2f(334,272),
+    cv::Point2f(308,271),
+    cv::Point2f(396,309),
+    cv::Point2f(367,311),
+    cv::Point2f(340,309),
+    cv::Point2f(316,308),
+    cv::Point2f(414,340),
+    cv::Point2f(391,350),
+    cv::Point2f(372,355),
+    cv::Point2f(346,360),
     };
 
 
@@ -105,7 +129,8 @@ int main(int argc, char **argv)
     cv::Mat ir_frame;
     //BaslerCamera basler_camera(500, 5000);
     //cv::VideoCapture basler_camera(0);
-    cv::VideoCapture basler_camera("D:\\TAU\\Research\\AnnotatedVideos\\2020-12-28_16-12-54-v\\Original.avi");
+    //cv::VideoCapture basler_camera("D:\\TAU\\Research\\AnnotatedVideos\\2020-12-28_16-12-54-v\\Original.avi");
+    cv::VideoCapture basler_camera("D:\\TAU\\Research\\AnnotatedVideos\\2020-12-28_16-09-31-v\\Original.avi");
 
     //assuming its calibrated already and the file is good
     LeapToImageMapper mapper(&leap, &black_frame);
@@ -202,7 +227,6 @@ int main(int argc, char **argv)
     //video_shower.Start(&black_frame);
     video_shower.Start(&ir_frame);
 
-
     // 500 FPS frames loop
     // get ir frames for fast regression and deformation
     thread* ir_frames_loop = new thread([&]()
@@ -221,6 +245,7 @@ int main(int argc, char **argv)
             regrresed_keypoint = appearance_regrresed_keypoint;*/
 
             appearanceModel.forward(ir_frame, regrresed_keypoint);
+            
 
             //deform game_frame using regrresed_keypoint
             // deformed_game_frame <= deform(game_frame,regrresed_keypoint)
