@@ -1,3 +1,90 @@
+#include <igl/readOFF.h>
+#include <igl/opengl/glfw/Viewer.h>
+#include <iostream>
+#include <igl/png/writePNG.h>
+#include <igl/png/readPNG.h>
+#include <igl_stb_image.cpp>
+
+//// This function is called every time a keyboard button is pressed
+//bool key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int modifier)
+//{
+//    if (key == '1')
+//    {
+//        // Allocate temporary buffers
+//        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> R(1280, 800);
+//        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> G(1280, 800);
+//        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> B(1280, 800);
+//        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> A(1280, 800);
+//
+//        // Draw the scene in the buffers
+//        viewer.core.draw_buffer(
+//            viewer.data(), false, R, G, B, A);
+//
+//        // Save it to a PNG
+//        igl::png::writePNG(R, G, B, A, "out.png");
+//    }
+//
+//    if (key == '2')
+//    {
+//        // Allocate temporary buffers
+//        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> R, G, B, A;
+//
+//        // Read the PNG
+//        igl::png::readPNG("out.png", R, G, B, A);
+//
+//        // Replace the mesh with a triangulated square
+//        Eigen::MatrixXd V(4, 2);
+//        V <<
+//            -10, -10, //0,
+//            1, -10, //0,
+//            1, 1, //0,
+//            -10, 1;//,0;
+//        Eigen::MatrixXi F(2, 3);
+//        F <<
+//            0, 1, 2,
+//            2, 3, 0;
+//        Eigen::MatrixXd UV(4, 2);
+//        UV <<
+//            0, 0,
+//            1, 0,
+//            1, 1,
+//            0, 1;
+//
+//        viewer.data().clear();
+//        viewer.data().set_mesh(V, F);
+//        viewer.data().set_uv(UV);
+//        viewer.core.align_camera_center(V);
+//        viewer.data().show_texture = true;
+//
+//        // Use the image as a texture
+//        viewer.data().set_texture(R, G, B);
+//
+//    }
+//
+//
+//    return false;
+//}
+//
+//int main(int argc, char *argv[])
+//{
+//    // Load a mesh in OFF format
+//    Eigen::MatrixXd V;
+//    Eigen::MatrixXi F;
+//    igl::readOFF("C:\\Users\\ofir\\Desktop\\libigl\\tutorial\\data\\bunny.off", V, F);
+//
+//    std::cerr << "Press 1 to render the scene and save it in a png." << std::endl;
+//    std::cerr << "Press 2 to load the saved png and use it as a texture." << std::endl;
+//
+//    // Plot the mesh and register the callback
+//    igl::opengl::glfw::Viewer viewer;
+//    viewer.callback_key_down = &key_down;
+//    viewer.data().set_mesh(V, F);
+//    viewer.launch();
+//}
+
+#define COCO
+#ifdef COCO
+
 #include <igl/opengl/gl.h>
 #include <igl/arap.h>
 #include <igl/biharmonic_coordinates.h>
@@ -329,6 +416,33 @@ vector<cv::Point_<int>> extract_contour_from_image(char* path)
     return contours[max_area_contour_index];
 }
 
+void ImageMatToEigen(char* path,
+    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& R,
+    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& G,
+    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& B/*,
+    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& A*/)
+{
+
+    using namespace cv;
+    int cols, rows, n;
+    Mat image = imread(path,cv::IMREAD_GRAYSCALE);
+    cols = image.cols;
+    rows = image.rows;
+    R.resize(cols, rows);
+    G.resize(cols, rows);
+    B.resize(cols, rows);
+    //A.resize(cols, rows);
+
+    for (unsigned i = 0; i < rows; ++i) {
+        for (unsigned j = 0; j < cols; ++j) {
+            R(j, rows - 1 - i) = (unsigned char)image.at<int>(i, j);
+            G(j, rows - 1 - i) = (unsigned char)image.at<int>(i, j);
+            B(j, rows - 1 - i) = (unsigned char)image.at<int>(i, j);
+            //A(j, rows - 1 - i) = image.at<int>(3 * (j + cols * i) + 0);
+        }
+    }
+}
+
 void triangulate_contour(vector<cv::Point_<int>> input_contour, Eigen::MatrixXd input_control_points, Eigen::MatrixXd& output_vertices, Eigen::MatrixXi& output_edges)
 {
     int input_contour_size = input_contour.size();
@@ -489,8 +603,12 @@ int main(int argc, char *argv[])
     //// Recompute just mass matrix on each step
     //SparseMatrix<double> M;
     //igl::massmatrix(V2D, F2D, igl::MASSMATRIX_TYPE_BARYCENTRIC, M);
+    
+    // Allocate temporary buffers
+    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> R, G, B, A;
 
-
+    // Read the PNG
+    igl::png::readPNG("C:\\Users\\ofir\\Desktop\\leap_hand_example_full_res.PNG", R, G, B, A);
 
     const auto &key_down = [](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
     {
@@ -507,16 +625,14 @@ int main(int argc, char *argv[])
             std::vector<int> indexes;
             Eigen::MatrixXd constraints_point;
             constraints_point.resize(21, 2);
-            for(int i=0;i<21;i++)
+            for (int i = 0; i < 21; i++)
             {
                 indexes.push_back(len_contour + i);
                 constraints_point.row(i) << U.row(len_contour + i);
             }
 
-            std::cout << "constraints_point: \n" << constraints_point << endl;
             constraints_point.row(8) << U.row(indexes[8])[0] - 15, U.row(indexes[8])[1];
             constraints_point.row(12) << U.row(indexes[12])[0] + 15, U.row(indexes[12])[1];
-            std::cout << "constraints_point: \n" << constraints_point << endl;
 
             LaplacianDeformationOperator(U, F2D, constraints_point, indexes);
 
@@ -530,10 +646,17 @@ int main(int argc, char *argv[])
         return true;
     };
 
+    Eigen::MatrixXd UV = V2D;
+    UV.col(0) /= 1024;
+    UV.col(1) /= 768;
 
     // Initialize smoothing with base mesh
     U = V2D;
     viewer.data().set_mesh(U, F2D);
+    viewer.data().set_uv(UV);
+    viewer.data().set_texture(R,G,B);
+    // Draw texture
+    viewer.data().show_texture = true;
     viewer.callback_key_down = key_down;
 
     std::cout << "Press [space] to smooth." << endl;;
@@ -939,3 +1062,4 @@ int main(int argc, char *argv[])
 //
 //    return 0;
 //}
+#endif
