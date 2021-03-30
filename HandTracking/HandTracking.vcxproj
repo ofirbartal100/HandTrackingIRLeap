@@ -44,6 +44,7 @@
     <ClInclude Include="AppearanceModel.h" />
     <ClInclude Include="BaslerCamera.h" />
     <ClInclude Include="csvfile.h" />
+    <ClInclude Include="FrameDeformator.h" />
     <ClInclude Include="ImageManipulator.h" />
     <ClInclude Include="LeapMotion.h" />
     <ClInclude Include="LeapToImageMapper.h" />
@@ -158,7 +159,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>..\include;..\include\basler;..\include\gl;..\include\SpoutSDK;..\include\SpoutSDK\SPOUTDLL\Source;..\leap\include;..\HandTracking\include;..\IGL Dependencies\eigen3;..\IGL Dependencies\include;..\IGL Dependencies\include\igl\triangle;..\libtorch\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\include\basler;..\include\gl;..\include\SpoutSDK;..\include\SpoutSDK\SPOUTDLL\Source;..\leap\include;..\HandTracking\include;..\IGL Dependencies\eigen3;..\IGL Dependencies\include;..\IGL Dependencies\include\igl\igl_stb;..\IGL Dependencies\include\igl\triangle;..\libtorch\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);CGAL_HEADER_ONLY;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
     </ClCompile>
     <Link>

@@ -1,90 +1,19 @@
-#include <igl/readOFF.h>
+#ifdef DUMMY
+
+#define NOMINMAX
+#define EXTREME_VERBOSE
+
+#include "opencv2/core/cvstd_wrapper.hpp"
+#include "opencv2/tracking.hpp"
+#include "opencv2/videoio.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/core.hpp"
+#include <opencv2/objdetect.hpp>
+
 #include <igl/opengl/glfw/Viewer.h>
-#include <iostream>
 #include <igl/png/writePNG.h>
 #include <igl/png/readPNG.h>
 #include <igl_stb_image.cpp>
-
-//// This function is called every time a keyboard button is pressed
-//bool key_down(igl::opengl::glfw::Viewer& viewer, unsigned char key, int modifier)
-//{
-//    if (key == '1')
-//    {
-//        // Allocate temporary buffers
-//        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> R(1280, 800);
-//        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> G(1280, 800);
-//        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> B(1280, 800);
-//        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> A(1280, 800);
-//
-//        // Draw the scene in the buffers
-//        viewer.core.draw_buffer(
-//            viewer.data(), false, R, G, B, A);
-//
-//        // Save it to a PNG
-//        igl::png::writePNG(R, G, B, A, "out.png");
-//    }
-//
-//    if (key == '2')
-//    {
-//        // Allocate temporary buffers
-//        Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> R, G, B, A;
-//
-//        // Read the PNG
-//        igl::png::readPNG("out.png", R, G, B, A);
-//
-//        // Replace the mesh with a triangulated square
-//        Eigen::MatrixXd V(4, 2);
-//        V <<
-//            -10, -10, //0,
-//            1, -10, //0,
-//            1, 1, //0,
-//            -10, 1;//,0;
-//        Eigen::MatrixXi F(2, 3);
-//        F <<
-//            0, 1, 2,
-//            2, 3, 0;
-//        Eigen::MatrixXd UV(4, 2);
-//        UV <<
-//            0, 0,
-//            1, 0,
-//            1, 1,
-//            0, 1;
-//
-//        viewer.data().clear();
-//        viewer.data().set_mesh(V, F);
-//        viewer.data().set_uv(UV);
-//        viewer.core.align_camera_center(V);
-//        viewer.data().show_texture = true;
-//
-//        // Use the image as a texture
-//        viewer.data().set_texture(R, G, B);
-//
-//    }
-//
-//
-//    return false;
-//}
-//
-//int main(int argc, char *argv[])
-//{
-//    // Load a mesh in OFF format
-//    Eigen::MatrixXd V;
-//    Eigen::MatrixXi F;
-//    igl::readOFF("C:\\Users\\ofir\\Desktop\\libigl\\tutorial\\data\\bunny.off", V, F);
-//
-//    std::cerr << "Press 1 to render the scene and save it in a png." << std::endl;
-//    std::cerr << "Press 2 to load the saved png and use it as a texture." << std::endl;
-//
-//    // Plot the mesh and register the callback
-//    igl::opengl::glfw::Viewer viewer;
-//    viewer.callback_key_down = &key_down;
-//    viewer.data().set_mesh(V, F);
-//    viewer.launch();
-//}
-
-#define COCO
-#ifdef COCO
-
 #include <igl/opengl/gl.h>
 #include <igl/arap.h>
 #include <igl/biharmonic_coordinates.h>
@@ -94,37 +23,12 @@
 #include <igl/matrix_to_list.h>
 #include <igl/parula.h>
 #include <igl/point_mesh_squared_distance.h>
-#include <igl/readDMAT.h>
-#include <igl/readMESH.h>
 #include <igl/remove_unreferenced.h>
-#include <igl/slice.h>
-#include <igl/writeDMAT.h>
-#include <igl/opengl/glfw/Viewer.h>
-#include <Eigen/Sparse>
-#include <Eigen/SparseQR>
-#include <Eigen/OrderingMethods>
-#include <iostream>
-#include <queue>
-
-#include "opencv2/core/cvstd_wrapper.hpp"
-#include "opencv2/tracking.hpp"
-#include "opencv2/videoio.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/core.hpp"
-#include <opencv2/objdetect.hpp>
-
-
-#include <igl/opengl/glfw/Viewer.h>
 #include <igl/triangle/triangulate.h>
 #include <igl/harmonic.h>
+#include <igl/slice.h>
 #include <igl/grad.h>
-#include <igl/biharmonic_coordinates.h>
-#include <Eigen/SparseQR>
-#include <Eigen/OrderingMethods>
-
-#define NOMINMAX
 #include <igl/boundary_conditions.h>
-#include <igl/copyleft/tetgen/tetrahedralize.h>
 #include <igl/copyleft/tetgen/mesh_with_skeleton.h>
 #include <igl/colon.h>
 #include <igl/directed_edge_orientations.h>
@@ -134,21 +38,28 @@
 #include <igl/partition.h>
 #include <igl/mat_max.h>
 #include <igl/lbs_matrix.h>
-#include <igl/slice.h>
 #include <igl/deform_skeleton.h>
 #include <igl/dqs.h>
-#include <igl/lbs_matrix.h>
 #include <igl/columnize.h>
-#include <igl/readDMAT.h>
-#include <igl/readOBJ.h>
 #include <igl/arap.h>
 #include <igl/arap_dof.h>
 #include <igl/bbw.h>
-#include <igl/opengl/glfw/Viewer.h>
+
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
+#include <Eigen/Sparse>
+#include <Eigen/SparseQR>
+#include <Eigen/OrderingMethods>
 
+#include <iostream>
+#include <queue>
 
+using namespace Eigen;
+using namespace std;
+
+typedef
+std::vector<Eigen::Quaterniond, Eigen::aligned_allocator<Eigen::Quaterniond> >
+RotationList;
 
 struct Mesh
 {
@@ -156,8 +67,33 @@ struct Mesh
     Eigen::MatrixXi T, F;
 }  scene;
 
+enum ModeType
+{
+    MODE_TYPE_ARAP = 0,
+    MODE_TYPE_ARAP_GROUPED = 1,
+    MODE_TYPE_ARAP_DOF = 2,
+    NUM_MODE_TYPES = 4
+};
+
+ModeType mode = MODE_TYPE_ARAP;
 Eigen::MatrixXd W;
 igl::ARAPData arap_data;
+const Eigen::RowVector3d sea_green(70. / 255., 252. / 255., 167. / 255.);
+Eigen::MatrixXd V, U, M;
+Eigen::VectorXi b;
+Eigen::MatrixXd L;
+double anim_t = 0.0;
+double anim_t_dir = 0.03;
+double bbd = 1.0;
+bool resolve = true;
+//igl::ARAPData arap_data, arap_grouped_data;
+igl::ArapDOFData<Eigen::MatrixXd, double> arap_dof_data;
+Eigen::SparseMatrix<double> Aeq;
+Eigen::MatrixXd V2D, U2D;
+Eigen::MatrixXi F2D;
+Eigen::SparseMatrix<double> L2D;
+igl::opengl::glfw::Viewer viewer;
+int len_contour;
 
 
 void LaplacianDeformationOperator(Eigen::MatrixXd& Vertices, Eigen::MatrixXi& Triangles, Eigen::MatrixXd& constraint_vertex_values, std::vector<int>& constraint_vertex_indexes)
@@ -193,183 +129,6 @@ void LaplacianDeformationOperator(Eigen::MatrixXd& Vertices, Eigen::MatrixXi& Tr
     Vertices.col(0) << MatrixXd(least_squares_x);
     Vertices.col(1) << MatrixXd(least_squares_y);
 }
-//
-//int main(int argc, char * argv[])
-//{
-//    using namespace Eigen;
-//    using namespace std;
-//    using namespace igl;
-//
-//    // read the mesh, if the code is prepared outside of tutorial, the TUTORIAL_SHARED_PATH
-//    // should be the data folder
-//    scene.V.resize(9, 2);
-//    scene.T.resize(8, 3);
-//    scene.F.resize(16, 2);
-//
-//    scene.V << 0, 0, 1, 0, 2, 0, 2, 1, 2, 2, 1, 2, 0, 2, 0, 1, 1, 1;
-//    scene.T << 0, 1, 8, 0, 8, 7, 1, 2, 3, 1, 3, 8, 8, 3, 4, 8, 4, 5, 5, 7, 8, 5, 6, 7;
-//    scene.F << 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 5, 8, 3, 8, 1, 0, 8, 1, 3, 8, 4, 7, 5, 7, 0;
-//    scene.U = scene.V;
-//    igl::opengl::glfw::Viewer viewer;
-//
-//
-//
-//    const auto &key_down = [](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
-//    {
-//        switch (key)
-//        {
-//        case 'r':
-//        case 'R':
-//            scene.U = scene.V;
-//            break;
-//        case ' ':
-//        {
-//            Eigen::MatrixXd constraints_point;
-//            constraints_point.resize(2, 2);
-//            constraints_point << -1, -1, 3, 3;
-//
-//            std::vector<int> indexes;
-//            indexes.push_back(0);
-//            indexes.push_back(4);
-//
-//            LaplacianDeformationOperator(scene.U, scene.T, constraints_point, indexes);
-//
-//            break;
-//        }
-//        default:
-//            return false;
-//        }
-//        // Send new positions, update normals, recenter
-//        viewer.data().set_mesh(scene.U, scene.T);
-//        return true;
-//    };
-//
-//
-//    viewer.data().set_mesh(scene.U, scene.T);
-//    viewer.callback_key_down = key_down;
-//    viewer.core.rotation_type = igl::opengl::ViewerCore::ROTATION_TYPE_TWO_AXIS_VALUATOR_FIXED_UP;
-//    viewer.launch();
-//
-//   
-//}
-
-
-typedef
-std::vector<Eigen::Quaterniond, Eigen::aligned_allocator<Eigen::Quaterniond> >
-RotationList;
-
-const Eigen::RowVector3d sea_green(70. / 255., 252. / 255., 167. / 255.);
-Eigen::MatrixXd V, U, M;
-//Eigen::MatrixXi F;
-//Eigen::VectorXi S, b;
-Eigen::VectorXi b;
-Eigen::MatrixXd L;
-//Eigen::RowVector3d mid;
-double anim_t = 0.0;
-double anim_t_dir = 0.03;
-double bbd = 1.0;
-bool resolve = true;
-//igl::ARAPData arap_data, arap_grouped_data;
-igl::ArapDOFData<Eigen::MatrixXd, double> arap_dof_data;
-Eigen::SparseMatrix<double> Aeq;
-
-enum ModeType
-{
-    MODE_TYPE_ARAP = 0,
-    MODE_TYPE_ARAP_GROUPED = 1,
-    MODE_TYPE_ARAP_DOF = 2,
-    NUM_MODE_TYPES = 4
-};
-
-ModeType mode = MODE_TYPE_ARAP;
-#define EXTREME_VERBOSE
-bool pre_draw(igl::opengl::glfw::Viewer & viewer)
-{
-    using namespace Eigen;
-    using namespace std;
-    if (resolve)
-    {
-        MatrixXd bc(b.size(), V.cols());
-        VectorXd Beq(3 * b.size());
-        //VectorXd Beq(2 * b.size());
-        for (int i = 0; i < b.size(); i++)
-        {
-            bc.row(i) = V.row(b(i));
-            switch (i % 4)
-            {
-            case 2:
-                bc(i, 0) += 0.15*bbd*sin(1.5*anim_t);
-                bc(i, 1) += 0.15*bbd*(1. - cos(0.5*anim_t));
-                break;
-            case 1:
-                bc(i, 1) += 0.10*bbd*sin(1.5*anim_t*(i + 1));
-                bc(i, 2) += 0.10*bbd*(1. - cos(1.*anim_t*(i + 1)));
-                break;
-            case 0:
-                bc(i, 0) += 0.20*bbd*sin(4.*anim_t*(i + 1));
-                break;
-            }
-            Beq(3 * i + 0) = bc(i, 0);
-            Beq(3 * i + 1) = bc(i, 1);
-            Beq(3 * i + 2) = bc(i, 2);
-        }
-
-        VectorXd L0 = L;
-        arap_dof_update(arap_dof_data, Beq, L0, 30, 10, L);
-
-        const auto & Ucol = M * L;
-        U.col(0) = Ucol.block(0 * U.rows(), 0, U.rows(), 1);
-        U.col(1) = Ucol.block(1 * U.rows(), 0, U.rows(), 1);
-        U.col(2) = Ucol.block(2 * U.rows(), 0, U.rows(), 1);
-
-
-        viewer.data().set_vertices(U);
-        viewer.data().set_points(bc, sea_green);
-        viewer.data().compute_normals();
-        if (viewer.core.is_animating)
-        {
-            anim_t += anim_t_dir;
-        }
-        else
-        {
-            resolve = false;
-        }
-
-
-    }
-    return false;
-}
-
-bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int mods)
-{
-    switch (key)
-    {
-    case '0':
-        anim_t = 0;
-        resolve = true;
-        return true;
-    case '.':
-        mode = (ModeType)(((int)mode + 1) % ((int)NUM_MODE_TYPES - 1));
-        resolve = true;
-        return true;
-    case ',':
-        mode = (ModeType)(((int)mode - 1) % ((int)NUM_MODE_TYPES - 1));
-        resolve = true;
-        return true;
-    case ' ':
-        viewer.core.is_animating = !viewer.core.is_animating;
-        if (viewer.core.is_animating)
-        {
-            resolve = true;
-        }
-        return true;
-    }
-    return false;
-}
-
-
-using namespace Eigen;
-using namespace std;
 
 int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
     double maxArea = 0;
@@ -383,8 +142,6 @@ int getMaxAreaContourId(vector <vector<cv::Point>> contours) {
     } // End for
     return maxAreaContourId;
 } // End function
-
-
 
 vector<cv::Point_<int>> extract_contour_from_image(char* path)
 {
@@ -497,20 +254,6 @@ void triangulate_contour(vector<cv::Point_<int>> input_contour, Eigen::MatrixXd 
    viewer.launch();*/
 }
 
-//void calculate_2d_mesh_bbw(Eigen::MatrixXd input_bone_points, Eigen::MatrixXi input_bone_edges, Eigen::MatrixXd input_vertices, Eigen::MatrixXi input_edges, VectorXi& boundry_indecies, Eigen::MatrixXd& output_bbw)
-//{
-//    Eigen::MatrixXd boundry_vertices_weights;
-//    bool res = igl::boundary_conditions(input_vertices, input_edges, input_bone_points, VectorXi(), input_bone_edges, MatrixXi(), boundry_indecies, boundry_vertices_weights);
-//    cout << res << endl << boundry_vertices_weights << endl;
-//    // compute BBW weights matrix
-//    igl::BBWData bbw_data;
-//    // only a few iterations for sake of demo
-//    bbw_data.active_set_params.max_iter = 50;
-//    bbw_data.verbosity = 2;
-//    res = igl::bbw(input_vertices, input_edges, boundry_indecies, boundry_vertices_weights, bbw_data, output_bbw);
-//    cout << res << endl << output_bbw.size() << endl;
-//}
-
 void skeleton_inputs(Eigen::MatrixXi& BE, Eigen::MatrixXd& control_points)
 {
     control_points.resize(21, 2);
@@ -545,61 +288,20 @@ void skeleton_inputs(Eigen::MatrixXi& BE, Eigen::MatrixXd& control_points)
         0, 13, 13, 14, 14, 15, 15, 16,
         0, 17, 17, 18, 18, 19, 19, 20; //skeleton connectivity
 }
-//
-//void to3D(Eigen::MatrixXd& input_2d_vertices, Eigen::MatrixXi& input_2d_triangles, vector<cv::Point_<int>> input_contour, Eigen::MatrixXd& output_vertices, Eigen::MatrixXi& output_triangles)
-//{
-//    int vrows = input_2d_vertices.rows();
-//    output_vertices.resize(vrows * 2, 3);
-//
-//    for (size_t i = 0; i < vrows; i++)
-//    {
-//        output_vertices.row(i) << input_2d_vertices.row(i), -1;
-//        output_vertices.row(vrows + i) << input_2d_vertices.row(i), 1;
-//    }
-//
-//    int erows = input_2d_triangles.rows();
-//    int crows = input_contour.size();
-//
-//    output_triangles.resize(erows * 2 + 2 * crows, 3);
-//
-//    //the contour points are first in the list
-//    for (size_t i = 0; i < crows; i++)
-//    {
-//        output_triangles.row(2 * i) << i, (i + 1) % crows, i + vrows; //top triangle
-//        output_triangles.row(2 * i + 1) << (i + 1) % crows, (i + 1) % crows + vrows, i + vrows; //bottom triangle
-//    }
-//
-//    for (size_t i = 0; i < erows; i++)
-//    {
-//        output_triangles.row(i + 2 * crows) << input_2d_triangles.row(i);
-//        output_triangles.row(erows + i + 2 * crows) << input_2d_triangles.row(i)[0] + vrows, input_2d_triangles.row(i)[1] + vrows, input_2d_triangles.row(i)[2] + vrows;
-//    }
-//
-//
-//}
 
-Eigen::MatrixXd V2D, U2D;
-Eigen::MatrixXi F2D;
-Eigen::SparseMatrix<double> L2D;
-igl::opengl::glfw::Viewer viewer;
-int len_contour;
-int main(int argc, char *argv[])
+int main_dd(int argc, char *argv[])
 {
     vector<cv::Point_<int>> contour = extract_contour_from_image("C:\\Users\\ofir\\Desktop\\leap_hand_example_full_res.PNG");
 
     Eigen::MatrixXi BE;
-    Eigen::VectorXi bi, S;
-    Eigen::MatrixXd control_points, W;
-    Eigen::MatrixXd control_points3D, delta, dp, constraints_point;
-    /* Eigen::MatrixXd V2D;
-     Eigen::SparseMatrix<double> L2D;*/
-     //Eigen::MatrixXd V;
-     //Eigen::MatrixXd U;
-    Eigen::MatrixXi F/*, F2D*/;
+    Eigen::VectorXi bi;
+    Eigen::MatrixXd control_points;
+    Eigen::MatrixXd constraints_point;
 
     skeleton_inputs(BE, control_points);
     triangulate_contour(contour, control_points, V2D, F2D);
     len_contour = (int)contour.size();
+
     //// Recompute just mass matrix on each step
     //SparseMatrix<double> M;
     //igl::massmatrix(V2D, F2D, igl::MASSMATRIX_TYPE_BARYCENTRIC, M);
@@ -609,6 +311,17 @@ int main(int argc, char *argv[])
 
     // Read the PNG
     igl::png::readPNG("C:\\Users\\ofir\\Desktop\\leap_hand_example_full_res.PNG", R, G, B, A);
+
+    // Initialize smoothing with base mesh
+    U = V2D;
+    viewer.data().set_mesh(U, F2D);
+    // Draw texture
+    Eigen::MatrixXd UV = V2D;
+    UV.col(0) /= 1024;
+    UV.col(1) /= 768;
+    viewer.data().set_uv(UV);
+    viewer.data().set_texture(R,G,B);
+    viewer.data().show_texture = true;
 
     const auto &key_down = [](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool
     {
@@ -632,7 +345,9 @@ int main(int argc, char *argv[])
             }
 
             constraints_point.row(8) << U.row(indexes[8])[0] - 15, U.row(indexes[8])[1];
+            constraints_point.row(7) << U.row(indexes[7])[0] - 10, U.row(indexes[7])[1];
             constraints_point.row(12) << U.row(indexes[12])[0] + 15, U.row(indexes[12])[1];
+            constraints_point.row(11) << U.row(indexes[11])[0] + 12, U.row(indexes[11])[1];
 
             LaplacianDeformationOperator(U, F2D, constraints_point, indexes);
 
@@ -645,118 +360,176 @@ int main(int argc, char *argv[])
         viewer.data().set_mesh(U, F2D);
         return true;
     };
-
-    Eigen::MatrixXd UV = V2D;
-    UV.col(0) /= 1024;
-    UV.col(1) /= 768;
-
-    // Initialize smoothing with base mesh
-    U = V2D;
-    viewer.data().set_mesh(U, F2D);
-    viewer.data().set_uv(UV);
-    viewer.data().set_texture(R,G,B);
-    // Draw texture
-    viewer.data().show_texture = true;
     viewer.callback_key_down = key_down;
 
-    std::cout << "Press [space] to smooth." << endl;;
-    std::cout << "Press [r] to reset." << endl;;
+    std::cout << "Press [space] to smooth." << endl;
+    std::cout << "Press [r] to reset." << endl;
     return viewer.launch();
 
 
-
-    //cout << F2D.row(0) << endl;
-    ///*to3D(V2D, F2D, contour, V, F);
-
-
-    //int cprows = control_points.rows();
-    //control_points3D.resize(cprows, 3);
-    //for (size_t i = 0; i < cprows; i++)
-    //{
-    //    control_points3D.row(i) << control_points.row(i)[0], control_points.row(i)[1], 0;
-    //}
-
-    //Eigen::MatrixXd W;
-    //calculate_2d_mesh_bbw(control_points3D, BE, V, F, b, W);*/
-
-    ///* igl::readOBJ("C:\\Users\\ofir\\Desktop\\libigl\\tutorial\\data\\armadillo.obj", V, F);
-    //U = V;
-    //igl::readDMAT("C:\\Users\\ofir\\Desktop\\libigl\\tutorial\\data\\armadillo-weights.dmat", W);
-    //ofstream myfile;
-    //myfile.open("dmat.txt");
-    //myfile << W << endl;*/
-
-    //U = V; // probably for updates..
-    //igl::lbs_matrix_column(V, W, M);
-
-    //// Cluster according to weights
-    //VectorXi G;
-    //{
-    //    VectorXi S;
-    //    VectorXd D;
-    //    igl::partition(W, 21, G, S, D);
-    //    //igl::partition(W, 50, G, S, D);
-    //}
-
-    ////// vertices corresponding to handles (those with maximum weight)
-    ////{
-    ////    VectorXd maxW;
-    ////    igl::mat_max(W, 1, maxW, b);
-    ////}
-
-    //// Precomputation for FAST
-    //std::cout << "Initializing Fast Automatic Skinning Transformations..." << endl;
-    //// number of weights
-    //const int m = W.cols();
-    //Aeq.resize(m * 3, m * 3 * (3 + 1)); //3D
-    ////Aeq.resize(m * 2, m * 2 * (2 + 1));
-    //vector<Triplet<double> > ijv;
-    //for (int i = 0; i < m; i++)
-    //{
-    //    //RowVector3d homo;
-    //    RowVector4d homo;
-    //    homo << V.row(b(i)), 1.;
-    //    for (int d = 0; d < 3; d++)
-    //        //for (int d = 0; d < 2; d++)
-    //    {
-    //        for (int c = 0; c < (3 + 1); c++)
-    //            //for (int c = 0; c < (2 + 1); c++)
-    //        {
-    //            ijv.push_back(Triplet<double>(3 * i + d, i + c * m * 3 + d * m, homo(c)));
-    //            //ijv.push_back(Triplet<double>(2 * i + d, i + c * m * 2 + d * m, homo(c)));
-    //        }
-    //    }
-    //}
-    //Aeq.setFromTriplets(ijv.begin(), ijv.end());
-    //igl::arap_dof_precomputation(V, F, M, G, arap_dof_data);
-    //igl::arap_dof_recomputation(VectorXi(), Aeq, arap_dof_data);
-    //// Initialize
-    //MatrixXd Istack = MatrixXd::Identity(3, 3 + 1).replicate(1, m); //3D
-    ////MatrixXd Istack = MatrixXd::Identity(2, 2 + 1).replicate(1, m);
-    //igl::columnize(Istack, m, 2, L);
-
-
-    //// bounding box diagonal
-    //bbd = (V.colwise().maxCoeff() - V.colwise().minCoeff()).norm();
-
-    //// Plot the mesh with pseudocolors
-    //igl::opengl::glfw::Viewer viewer;
-    //viewer.data().set_mesh(U, F);
-    ////viewer.data().add_points(igl::slice(V, b, 1), sea_green);
-    ////viewer.data().show_lines = false;
-    //viewer.callback_pre_draw = &pre_draw;
-    //viewer.callback_key_down = &key_down;
-    //viewer.core.is_animating = false;
-    //viewer.core.animation_max_fps = 30.;
-    //std::cout <<
-    //    "Press [space] to toggle animation." << endl <<
-    //    "Press '0' to reset pose." << endl <<
-    //    "Press '.' to switch to next deformation method." << endl <<
-    //    "Press ',' to switch to previous deformation method." << endl;
-    //viewer.launch();
 }
 
-
+//bool pre_draw(igl::opengl::glfw::Viewer & viewer)
+//{
+//    using namespace Eigen;
+//    using namespace std;
+//    if (resolve)
+//    {
+//        MatrixXd bc(b.size(), V.cols());
+//        VectorXd Beq(3 * b.size());
+//        //VectorXd Beq(2 * b.size());
+//        for (int i = 0; i < b.size(); i++)
+//        {
+//            bc.row(i) = V.row(b(i));
+//            switch (i % 4)
+//            {
+//            case 2:
+//                bc(i, 0) += 0.15*bbd*sin(1.5*anim_t);
+//                bc(i, 1) += 0.15*bbd*(1. - cos(0.5*anim_t));
+//                break;
+//            case 1:
+//                bc(i, 1) += 0.10*bbd*sin(1.5*anim_t*(i + 1));
+//                bc(i, 2) += 0.10*bbd*(1. - cos(1.*anim_t*(i + 1)));
+//                break;
+//            case 0:
+//                bc(i, 0) += 0.20*bbd*sin(4.*anim_t*(i + 1));
+//                break;
+//            }
+//            Beq(3 * i + 0) = bc(i, 0);
+//            Beq(3 * i + 1) = bc(i, 1);
+//            Beq(3 * i + 2) = bc(i, 2);
+//        }
+//
+//        VectorXd L0 = L;
+//        arap_dof_update(arap_dof_data, Beq, L0, 30, 10, L);
+//
+//        const auto & Ucol = M * L;
+//        U.col(0) = Ucol.block(0 * U.rows(), 0, U.rows(), 1);
+//        U.col(1) = Ucol.block(1 * U.rows(), 0, U.rows(), 1);
+//        U.col(2) = Ucol.block(2 * U.rows(), 0, U.rows(), 1);
+//
+//
+//        viewer.data().set_vertices(U);
+//        viewer.data().set_points(bc, sea_green);
+//        viewer.data().compute_normals();
+//        if (viewer.core.is_animating)
+//        {
+//            anim_t += anim_t_dir;
+//        }
+//        else
+//        {
+//            resolve = false;
+//        }
+//
+//
+//    }
+//    return false;
+//}
+//
+//bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int mods)
+//{
+//    switch (key)
+//    {
+//    case '0':
+//        anim_t = 0;
+//        resolve = true;
+//        return true;
+//    case '.':
+//        mode = (ModeType)(((int)mode + 1) % ((int)NUM_MODE_TYPES - 1));
+//        resolve = true;
+//        return true;
+//    case ',':
+//        mode = (ModeType)(((int)mode - 1) % ((int)NUM_MODE_TYPES - 1));
+//        resolve = true;
+//        return true;
+//    case ' ':
+//        viewer.core.is_animating = !viewer.core.is_animating;
+//        if (viewer.core.is_animating)
+//        {
+//            resolve = true;
+//        }
+//        return true;
+//    }
+//    return false;
+//}
+//cout << F2D.row(0) << endl;
+//to3D(V2D, F2D, contour, V, F);
+//int cprows = control_points.rows();
+//control_points3D.resize(cprows, 3);
+//for (size_t i = 0; i < cprows; i++)
+//{
+//    control_points3D.row(i) << control_points.row(i)[0], control_points.row(i)[1], 0;
+//}
+//Eigen::MatrixXd W;
+//calculate_2d_mesh_bbw(control_points3D, BE, V, F, b, W);*/
+// igl::readOBJ("C:\\Users\\ofir\\Desktop\\libigl\\tutorial\\data\\armadillo.obj", V, F);
+//U = V;
+//igl::readDMAT("C:\\Users\\ofir\\Desktop\\libigl\\tutorial\\data\\armadillo-weights.dmat", W);
+//ofstream myfile;
+//myfile.open("dmat.txt");
+//myfile << W << endl;*/
+//U = V; // probably for updates..
+//igl::lbs_matrix_column(V, W, M);
+//// Cluster according to weights
+//VectorXi G;
+//{
+//    VectorXi S;
+//    VectorXd D;
+//    igl::partition(W, 21, G, S, D);
+//    //igl::partition(W, 50, G, S, D);
+//}
+////// vertices corresponding to handles (those with maximum weight)
+////{
+////    VectorXd maxW;
+////    igl::mat_max(W, 1, maxW, b);
+////}
+//// Precomputation for FAST
+//std::cout << "Initializing Fast Automatic Skinning Transformations..." << endl;
+//// number of weights
+//const int m = W.cols();
+//Aeq.resize(m * 3, m * 3 * (3 + 1)); //3D
+////Aeq.resize(m * 2, m * 2 * (2 + 1));
+//vector<Triplet<double> > ijv;
+//for (int i = 0; i < m; i++)
+//{
+//    //RowVector3d homo;
+//    RowVector4d homo;
+//    homo << V.row(b(i)), 1.;
+//    for (int d = 0; d < 3; d++)
+//        //for (int d = 0; d < 2; d++)
+//    {
+//        for (int c = 0; c < (3 + 1); c++)
+//            //for (int c = 0; c < (2 + 1); c++)
+//        {
+//            ijv.push_back(Triplet<double>(3 * i + d, i + c * m * 3 + d * m, homo(c)));
+//            //ijv.push_back(Triplet<double>(2 * i + d, i + c * m * 2 + d * m, homo(c)));
+//        }
+//    }
+//}
+//Aeq.setFromTriplets(ijv.begin(), ijv.end());
+//igl::arap_dof_precomputation(V, F, M, G, arap_dof_data);
+//igl::arap_dof_recomputation(VectorXi(), Aeq, arap_dof_data);
+//// Initialize
+//MatrixXd Istack = MatrixXd::Identity(3, 3 + 1).replicate(1, m); //3D
+////MatrixXd Istack = MatrixXd::Identity(2, 2 + 1).replicate(1, m);
+//igl::columnize(Istack, m, 2, L);
+//// bounding box diagonal
+//bbd = (V.colwise().maxCoeff() - V.colwise().minCoeff()).norm();
+//// Plot the mesh with pseudocolors
+//igl::opengl::glfw::Viewer viewer;
+//viewer.data().set_mesh(U, F);
+////viewer.data().add_points(igl::slice(V, b, 1), sea_green);
+////viewer.data().show_lines = false;
+//viewer.callback_pre_draw = &pre_draw;
+//viewer.callback_key_down = &key_down;
+//viewer.core.is_animating = false;
+//viewer.core.animation_max_fps = 30.;
+//std::cout <<
+//    "Press [space] to toggle animation." << endl <<
+//    "Press '0' to reset pose." << endl <<
+//    "Press '.' to switch to next deformation method." << endl <<
+//    "Press ',' to switch to previous deformation method." << endl;
+//viewer.launch();
 //#pragma region deformation tries
 //
 //  ////read skeleton from unity
@@ -846,7 +619,7 @@ int main(int argc, char *argv[])
 //  }
 //  E.row(contour_size - 1) << contour_size - 1, 0;
 //
-///*  for (size_t i = contour_size; i < contour_size + 21; i++)
+//  for (size_t i = contour_size; i < contour_size + 21; i++)
 //  {
 //      V.row(i) << control_points.row(i - contour_size);
 //      E.row(i) << i, i;
@@ -927,139 +700,50 @@ int main(int argc, char *argv[])
 //  return 0;  
 //#pragma endregion
 //
-
-
-#define VERBOSE
-//
-//int trian()
+//void calculate_2d_mesh_bbw(Eigen::MatrixXd input_bone_points, Eigen::MatrixXi input_bone_edges, Eigen::MatrixXd input_vertices, Eigen::MatrixXi input_edges, VectorXi& boundry_indecies, Eigen::MatrixXd& output_bbw)
 //{
-//    using namespace cv;
-//    Mat raw = imread("C:\\Users\\ofir\\Desktop\\leap_hand_example_full_res.PNG");
-//    Mat src;
-//    flip(raw, src, 0);
-//    int r = 3 * 16 + 2, g = 4 * 16 + 10, b = 8 * 16 + 7;
-//    Mat binary_image = abs(src - Scalar(b, g, r));
-//    Mat src_gray;
-//    cvtColor(binary_image, src_gray, COLOR_BGR2GRAY);
-//    Mat canny_output;
-//    threshold(src_gray, canny_output, 1, 255, CV_THRESH_BINARY);
-//    vector<vector<Point> > contours;
-//    vector<Vec4i> hierarchy;
-//    findContours(canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
-//    Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
-//    //Scalar color = Scalar(rng.uniform(0, 256), rng.uniform(0, 256), rng.uniform(0, 256));
-//    Scalar color = Scalar(166, 12, 89);
-//    int max_area_contour_index = getMaxAreaContourId(contours);
-//    drawContours(drawing, contours, max_area_contour_index, color, 2, LINE_8, hierarchy, 0);
-//
-//
-//    auto contour = contours[max_area_contour_index];
-//    int contour_size = contour.size();
-//    /* imshow("raw", raw);
-//     waitKey(0);
-//     imshow("src", src);
-//     waitKey(0);*/
-//
-//
-//
-//     // Input polygon
-//    Eigen::MatrixXd V, bc, W;
-//    Eigen::MatrixXi E, BE;
-//    VectorXi bi;
-//    Eigen::MatrixXd H;
-//    Eigen::MatrixXd control_points;
-//    Eigen::MatrixXi control_points_index;
-//
-//    // Triangulated interior
-//    Eigen::MatrixXd V2, U;
-//    Eigen::MatrixXi F2;
-//
-//    // Create the boundary of a square
-//    control_points.resize(21, 2);
-//    BE.resize(20, 2);
-//    control_points_index.resize(21, 1);
-//    V.resize(contour_size + 21, 2);
-//    E.resize(contour_size, 2);
-//
-//    control_points <<
-//        528, 182, //0, //palm 0
-//        571, 205, //0, //thumb 1
-//        622, 311, //0, //thumb 2
-//        653, 357, //0, //thumb 3
-//        679, 414 - 8, //0, //thumb 4
-//        575, 362, //0, //index 5
-//        587, 441, //0, //index 6 
-//        594, 488, //0, //index 7 
-//        600, 529 - 5, //0, //index 8 
-//        531, 361, //0, //middle 9 
-//        530, 445, //0, //middle 10 
-//        531, 496, //0, //middle 11
-//        532, 541 - 9, //0, //middle 12 
-//        489, 358,// 0, //ring 13
-//        474, 430,// 0, //ring 14
-//        466, 475,// 0, //ring 15
-//        458, 522 - 9,// 0, //ring 16
-//        450, 349,// 0, //pinky 17 
-//        423, 404,// 0,//pinky 18
-//        410, 436,// 0, //pinky 19
-//        396, 474 - 9,// 0; //pinky 20
-//
-//        BE << 0, 1, 1, 2, 2, 3, 3, 4,
-//        0, 5, 5, 6, 6, 7, 7, 8,
-//        0, 9, 9, 10, 10, 11, 11, 12,
-//        0, 13, 13, 14, 14, 15, 15, 16,
-//        0, 17, 17, 18, 18, 19, 19, 20; //skeleton connectivity
-//
-//    for (size_t i = 0; i < contour_size; i++)
-//    {
-//        V.row(i) << contour[i].x, contour[i].y;// , 0;
-//        E.row(i) << i, i + 1;
-//    }
-//    E.row(contour_size - 1) << contour_size - 1, 0;
-//
-//    for (size_t i = contour_size; i < contour_size + 21; i++)
-//    {
-//        V.row(i) << control_points.row(i - contour_size);
-//        //E.row(i) << i, i;
-//        control_points_index.row(i - contour_size) << i;
-//
-//        circle(drawing, Point(V.row(i)[0], V.row(i)[1]), 3, Scalar(0, 255, 25), -1);
-//    }
-//    imshow("Contours", drawing);
-//    waitKey(0);
-//    //V.row(contour.size()-1) << contour[contour.size() - 1].x, contour[contour.size() - 1].y;
-//    /*control_points_moved << V.row(0) + RowVector3d(0, 50, 0);*/
-//
-//
-//    // Triangulate the interior
-//    // a0.005 means that the area of each triangle should
-//    // not be greater than 0.005
-//    // q means that no angles will be smaller than 20 degrees
-//    // for a detailed set of commands please refer to:
-//    // https://www.cs.cmu.edu/~quake/triangle.switch.html
-//
-//
-//    igl::triangle::triangulate(V, E, H, "a100q", V2, F2);
-//
-//    // Plot the mesh with pseudocolors
-//    igl::opengl::glfw::Viewer viewer;
-//    viewer.data().set_mesh(V2, F2);
-//    viewer.data().add_points(control_points, sea_green);
-//    viewer.launch();
-//    //return 0;
-//    bool res = igl::boundary_conditions(V2, F2, control_points, VectorXi(), BE, MatrixXi(), bi, bc);
-//    cout << res << endl << bc << endl;
+//    Eigen::MatrixXd boundry_vertices_weights;
+//    bool res = igl::boundary_conditions(input_vertices, input_edges, input_bone_points, VectorXi(), input_bone_edges, MatrixXi(), boundry_indecies, boundry_vertices_weights);
+//    cout << res << endl << boundry_vertices_weights << endl;
 //    // compute BBW weights matrix
 //    igl::BBWData bbw_data;
 //    // only a few iterations for sake of demo
 //    bbw_data.active_set_params.max_iter = 50;
 //    bbw_data.verbosity = 2;
-//    if (!igl::bbw(V2, F2, bi, bc, bbw_data, W))
-//        //if (!igl::bbw(TV, TT, bi, bc, bbw_data, W))
+//    res = igl::bbw(input_vertices, input_edges, boundry_indecies, boundry_vertices_weights, bbw_data, output_bbw);
+//    cout << res << endl << output_bbw.size() << endl;
+//}
+//
+//void to3D(Eigen::MatrixXd& input_2d_vertices, Eigen::MatrixXi& input_2d_triangles, vector<cv::Point_<int>> input_contour, Eigen::MatrixXd& output_vertices, Eigen::MatrixXi& output_triangles)
+//{
+//    int vrows = input_2d_vertices.rows();
+//    output_vertices.resize(vrows * 2, 3);
+//
+//    for (size_t i = 0; i < vrows; i++)
 //    {
-//        return EXIT_FAILURE;
+//        output_vertices.row(i) << input_2d_vertices.row(i), -1;
+//        output_vertices.row(vrows + i) << input_2d_vertices.row(i), 1;
 //    }
 //
-//    return 0;
+//    int erows = input_2d_triangles.rows();
+//    int crows = input_contour.size();
+//
+//    output_triangles.resize(erows * 2 + 2 * crows, 3);
+//
+//    //the contour points are first in the list
+//    for (size_t i = 0; i < crows; i++)
+//    {
+//        output_triangles.row(2 * i) << i, (i + 1) % crows, i + vrows; //top triangle
+//        output_triangles.row(2 * i + 1) << (i + 1) % crows, (i + 1) % crows + vrows, i + vrows; //bottom triangle
+//    }
+//
+//    for (size_t i = 0; i < erows; i++)
+//    {
+//        output_triangles.row(i + 2 * crows) << input_2d_triangles.row(i);
+//        output_triangles.row(erows + i + 2 * crows) << input_2d_triangles.row(i)[0] + vrows, input_2d_triangles.row(i)[1] + vrows, input_2d_triangles.row(i)[2] + vrows;
+//    }
+//
+//
 //}
+
 #endif

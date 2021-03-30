@@ -26,7 +26,7 @@ class UnityDataPipe
     }
 
     int* raw_keypoints;
-    std::vector<cv::Point2i> keypoints;
+    std::vector<cv::Point2f> keypoints;
 
 
 public:
@@ -39,7 +39,7 @@ public:
         fileHandle = CreateFileW(TEXT(L"\\\\.\\pipe\\my-very-cool-pipe-example"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     }
 
-    std::vector<cv::Point2i> ReadKeypointsFromPipe()
+    std::vector<cv::Point2f> ReadKeypointsFromPipe()
     {
         memset(buffer, 0, buffer_size);
         int len = ReadString(buffer);
@@ -67,7 +67,7 @@ public:
             //update the keypoints
             for (int i = 0; i < 21; i++)
             {
-                keypoints.push_back(cv::Point2i(raw_keypoints[2 * i], raw_keypoints[2 * i + 1]));
+                keypoints.push_back(cv::Point2f(raw_keypoints[2 * i], raw_keypoints[2 * i + 1]));
             }
         }
 
