@@ -1,7 +1,6 @@
 #pragma once
 #include "opencv2\core.hpp"
-//#include "GL\glew.h"
-#include "GL\freeglut.h"
+#include <GLFW/glfw3.h>
 #include "Spout.h"
 #include "SpoutDLL.h"
 class Opencv2Spout
