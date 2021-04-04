@@ -52,6 +52,7 @@
     <ClInclude Include="Opencv2Opengl.h" />
     <ClInclude Include="PointsPatternManipulator.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="UdpServerParser.h" />
     <ClInclude Include="UnityDataPipe.h" />
     <ClInclude Include="UserInputHandler.h" />
     <ClInclude Include="VideoSaver.h" />
@@ -159,14 +160,16 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>..\include;..\include\basler;..\include\gl;..\include\SpoutSDK;..\include\SpoutSDK\SPOUTDLL\Source;..\leap\include;..\HandTracking\include;..\IGL Dependencies\eigen3;..\IGL Dependencies\include;..\IGL Dependencies\include\igl\igl_stb;..\IGL Dependencies\include\igl\triangle;..\libtorch\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\include\basler;..\include\gl;..\include\SpoutSDK;..\include\SpoutSDK\SPOUTDLL\Source;..\leap\include;..\HandTracking\include;..\IGL Dependencies\eigen3;..\IGL Dependencies\include;..\IGL Dependencies\include\igl\igl_stb;..\IGL Dependencies\include\igl\triangle;..\libtorch\include;..\include\cppServer\modules\CppCommon\include;..\include\cppServer\modules\CppCommon\modules\vld;..\include\cppServer\modules\CppCommon\modules\fmt\include;..\include\cppServer\include;..\include\cppServer\modules;..\include\cppServer\modules\asio\asio\include;..\include\cppServer\modules\OpenSSl\VS\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);CGAL_HEADER_ONLY;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\lib;..\lib\basler\x64;..\lib\gl;..\lib\spout;..\lib\igl;..\leap\lib;..\lib\3rdParty;..\libtorch\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LeapC.lib;PollingSample.lib;opencv_ts401.lib;opencv_tracking401.lib;opencv_plot401.lib;opencv_datasets401.lib;opencv_video401.lib;ippiwd.lib;ippicvmt.lib;opencv_text401.lib;opencv_ml401.lib;opencv_dnn401.lib;opencv_calib3d401.lib;opencv_ccalib401.lib;opencv_features2d401.lib;opencv_flann401.lib;opencv_highgui401.lib;opencv_videoio401.lib;opencv_imgcodecs401.lib;opencv_imgproc401.lib;opencv_core401.lib;opencv_objdetect401.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;freeglut.lib;freeglut_static.lib;igl_stb_image.lib;glfw3.lib;glew32.lib;glew32s.lib;Spout.lib;Spout2.lib;triangle.lib;tetgen.lib;asmjit.lib;c10.lib;c10d.lib;c10_cuda.lib;caffe2_detectron_ops_gpu.lib;caffe2_module_test_dynamic.lib;caffe2_nvrtc.lib;clog.lib;cpuinfo.lib;dnnl.lib;fbgemm.lib;gloo.lib;gloo_cuda.lib;libprotobuf-lite.lib;libprotobuf.lib;libprotoc.lib;mkldnn.lib;torch.lib;torch_cpu.lib;torch_cuda.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\lib;..\lib\basler\x64;..\lib\gl;..\lib\spout;..\lib\igl;..\leap\lib;..\lib\3rdParty;..\libtorch\lib;..\lib\cppServer</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LeapC.lib;PollingSample.lib;opencv_ts401.lib;opencv_tracking401.lib;opencv_plot401.lib;opencv_datasets401.lib;opencv_video401.lib;ippiwd.lib;ippicvmt.lib;opencv_text401.lib;opencv_ml401.lib;opencv_dnn401.lib;opencv_calib3d401.lib;opencv_ccalib401.lib;opencv_features2d401.lib;opencv_flann401.lib;opencv_highgui401.lib;opencv_videoio401.lib;opencv_imgcodecs401.lib;opencv_imgproc401.lib;opencv_core401.lib;opencv_objdetect401.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;freeglut.lib;freeglut_static.lib;igl_stb_image.lib;glfw3.lib;glew32.lib;glew32s.lib;Spout.lib;Spout2.lib;triangle.lib;tetgen.lib;asmjit.lib;c10.lib;c10d.lib;c10_cuda.lib;caffe2_detectron_ops_gpu.lib;caffe2_module_test_dynamic.lib;caffe2_nvrtc.lib;clog.lib;cpuinfo.lib;dnnl.lib;fbgemm.lib;gloo.lib;gloo_cuda.lib;libprotobuf-lite.lib;libprotobuf.lib;libprotoc.lib;mkldnn.lib;torch.lib;torch_cpu.lib;torch_cuda.lib;opengl32.lib;crypt32.lib;Rpcrt4.lib;libssl.lib;libcrypto.lib;cppcommon.lib;cppserver.lib;fmt.lib;asio.lib</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

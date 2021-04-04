@@ -7,15 +7,15 @@
 #include "Opencv2Opengl.h"
 using namespace std;
 using namespace cv;
-int main(int argc, char **argv)
+int main456(int argc, char **argv)
 {
 
     cv::Mat gray = cv::Mat();
     Mat img;
     VideoCapture cap;
-    Opencv2Spout conversor(argc, argv, 640, 480, false);
+    Opencv2Spout conversor(argc, argv, 1024, 768, false);
     char nombreReceiver[256];
-    strcpy_s(nombreReceiver, 256, "SpoutCam");
+    strcpy_s(nombreReceiver, 256, "UserPerspective");
     bool receiverExists = conversor.initReceiver(nombreReceiver);
     if (receiverExists)
         cout << "Receiver " << nombreReceiver << " detected " << endl;
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
                 img = conversor.receiveTexture();
             else
                 cap >> img; // get a new frame from camera
-            if (waitKey(30) > 0)
+            if (waitKey(15) > 0)
                 break;
             else
             {

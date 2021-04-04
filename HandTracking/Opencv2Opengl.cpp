@@ -25,7 +25,7 @@ Opencv2Spout::Opencv2Spout(int argc, char **argv, unsigned int width, unsigned i
 
     // Open a window and create its OpenGL context
     GLFWwindow* window; // (In the accompanying source code, this variable is global for simplicity)
-    window = glfwCreateWindow(10, 10, "G", NULL, NULL);
+    window = glfwCreateWindow(100, 10, "SpoutWindow", NULL, NULL);
     if (window == NULL) {
         fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
         glfwTerminate();
@@ -63,7 +63,7 @@ bool Opencv2Spout::initReceiver(char* name)
 {
     m_receiverName = name;
     spoutReceiver = new SpoutReceiver();
-    if (spoutReceiver->CreateReceiver(m_receiverName, m_iWidth, m_iHeight, true))
+    if (spoutReceiver->CreateReceiver(m_receiverName, m_iWidth, m_iHeight, false))
     {
         m_bReceiverCreated = true;
         return true;

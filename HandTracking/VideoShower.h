@@ -19,7 +19,7 @@ protected:
 	ImageManipulator* manipulator;
     const cv::Mat* referencedFrame;
 
-	thread* showing_thread;
+	thread* showing_thread = nullptr;
 
 	void showing_loop()
 	{

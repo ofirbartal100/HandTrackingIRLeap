@@ -1,5 +1,24 @@
 #ifdef DUMMY
 
+#include "UdpServerParser.h"
+#include <vector>
+#include <algorithm>
+#include <filesystem>
+#include <ppl.h>
+#include <ctime>
+#include <iostream>
+#include <chrono>
+using namespace std::chrono;
+using namespace std;
+
+int main()
+{
+    UdpServerParser USP;
+    int a;
+    cin >> a;
+}
+
+
 #define NOMINMAX
 #define EXTREME_VERBOSE
 
@@ -182,7 +201,7 @@ void ImageMatToEigen(char* path,
 
     using namespace cv;
     int cols, rows, n;
-    Mat image = imread(path,cv::IMREAD_GRAYSCALE);
+    Mat image = imread(path, cv::IMREAD_GRAYSCALE);
     cols = image.cols;
     rows = image.rows;
     R.resize(cols, rows);
@@ -305,7 +324,7 @@ int main_dd(int argc, char *argv[])
     //// Recompute just mass matrix on each step
     //SparseMatrix<double> M;
     //igl::massmatrix(V2D, F2D, igl::MASSMATRIX_TYPE_BARYCENTRIC, M);
-    
+
     // Allocate temporary buffers
     Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> R, G, B, A;
 
@@ -320,7 +339,7 @@ int main_dd(int argc, char *argv[])
     UV.col(0) /= 1024;
     UV.col(1) /= 768;
     viewer.data().set_uv(UV);
-    viewer.data().set_texture(R,G,B);
+    viewer.data().set_texture(R, G, B);
     viewer.data().show_texture = true;
 
     const auto &key_down = [](igl::opengl::glfw::Viewer &viewer, unsigned char key, int mod)->bool

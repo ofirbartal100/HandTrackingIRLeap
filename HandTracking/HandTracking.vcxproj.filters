@@ -119,6 +119,9 @@
     <ClInclude Include="FrameDeformator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UdpServerParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="default.xml">
