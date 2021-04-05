@@ -58,7 +58,7 @@ class FrameDeformation
         return maxAreaContourId;
     } // End function
 
-    std::vector<cv::Point> extract_contour_from_image(cv::Mat raw)
+    std::vector<cv::Point> extract_contour_from_image(cv::Mat& raw)
     {
         using namespace cv;
         Mat src;
@@ -206,20 +206,29 @@ public:
         //save to mat
     }
 
-    void SetMeshFromFrame(cv::Mat frame, std::vector<cv::Point2f> control_points)
+    void SetMeshFromFrame(cv::Mat& frame, std::vector<cv::Point2f> control_points)
     {
         //inputs
         vector_points_to_matrix(control_points, _control_points);
+        cout << _control_points << endl;
         auto contour = extract_contour_from_image(frame);
         _contour.clear();
         for(cv::Point point : contour)
         {
             _contour.push_back(cv::Point2f(point.x, point.y));
+            
         }
-
+        for (cv::Point p : control_points)
+        {
+            cv::circle(frame, cv::Point(p.x,frame.rows-p.y), 3, cv::Scalar(0, 0, 255), -1);
+        }
+        
+        cv::imshow("frame", frame);
+        cv::waitKey(0);
         //to mesh
         triangulate_contour(_contour, _control_points, V, F);
         len_contour = (int)_contour.size();
+        cout << len_contour << endl;
 
         U = V;
         //viewer.data().set_mesh(U, F);
@@ -253,17 +262,21 @@ public:
         isInitialized = true;
     }
 
-    void UpdateTextureAndHandles(cv::Mat frame, std::vector<cv::Point2f> control_points)
+    void UpdateTextureAndHandles(cv::Mat& frame, std::vector<cv::Point2f> control_points)
     {
         if (!isInitialized) return;
 
         //inputs
+
+        DeformMesh(control_points);
         vector_points_to_matrix(control_points, _control_points);
 
         // Draw texture
         UV = U;
         UV.col(0) /= frame.cols;
         UV.col(1) /= frame.rows;
+
+        ImageMatToEigen(frame, _R, _G, _B);
         /*viewer.data().set_uv(UV);
         viewer.data().set_texture(R, G, B);*/
     }

@@ -1,4 +1,3 @@
-
 #include "UdpServerParser.h"
 #include <igl/opengl/glfw/Viewer.h>
 #include "GL\freeglut.h"
@@ -39,44 +38,64 @@ using namespace std;
 igl::opengl::glfw::Viewer viewer;
 FrameDeformation deformator;
 
+Eigen::MatrixXd V(4, 2);
+Eigen::MatrixXi F(2, 3);
+
+bool new_data;
+bool new_texture;
+bool new_mesh;
+
 //need to be here because of imports issues
-void SetMeshFromFrame(cv::Mat image, std::vector<cv::Point2f> v)
+void SetMeshFromFrame(cv::Mat& image, std::vector<cv::Point2f>& v)
 {
     if (v.size() == 21)
     {
         deformator.SetMeshFromFrame(image, v);
-        viewer.data().set_mesh(deformator.U, deformator.F);
+       /* viewer.data().set_mesh(deformator.U, deformator.F);
         viewer.data().set_uv(deformator.UV);
         viewer.data().set_texture(deformator._R, deformator._G, deformator._B);
-        viewer.data().show_texture = true;
+        viewer.data().show_texture = true;*/
+        new_mesh = true;
+        new_data = true;
+        new_texture = true;
     }
 }
 
 //need to be here because of imports issues
-void UpdateTextureAndHandles(cv::Mat image, std::vector<cv::Point2f> v)
+void UpdateTextureAndHandles(cv::Mat& image, std::vector<cv::Point2f>& v)
 {
     if (v.size() == 21)
     {
         deformator.UpdateTextureAndHandles(image, v);
-        viewer.data().set_uv(deformator.UV);
-        viewer.data().set_texture(deformator._R, deformator._G, deformator._B);
+       /* viewer.data().set_uv(deformator.UV);
+        viewer.data().set_texture(deformator._R, deformator._G, deformator._B);*/
+        new_data = true;
+        new_texture = true;
+        cout << "Updated" << endl;
     }
 }
 
 //need to be here because of imports issues
-void DeformMesh(std::vector<cv::Point2f> v)
+void DeformMesh(std::vector<cv::Point2f>& v)
 {
     if (v.size() == 21)
     {
         deformator.DeformMesh(v);
-        viewer.data().set_mesh(deformator.U, deformator.F);
+        //viewer.data().set_mesh(deformator.U, deformator.F);
+        new_data = true;
     }
 }
-
-
-
 int main(int argc, char **argv)
 {
+    V <<
+        0, 0,
+        0, 768,
+        1024, 768,
+        1024, 0;
+
+    F <<
+        0, 1, 2,
+        2, 3, 0;
 
 #pragma region Initializations
     // Initializations
@@ -116,21 +135,50 @@ int main(int argc, char **argv)
     //leap.StartGrabbing();
     //basler_camera.StartGrabbing();
 
-
+    viewer.callback_pre_draw = [&](igl::opengl::glfw::Viewer & viewer)->bool
+    {
+        if (viewer.core.is_animating)
+        {
+            if(new_data)
+            {
+                if(new_mesh)
+                {
+                    viewer.data().clear();
+                    new_mesh = false;
+                }
+                viewer.data().set_mesh(deformator.U, deformator.F);
+                new_data = false;
+                if(new_texture)
+                {
+                    viewer.data().set_uv(deformator.UV);
+                    viewer.data().set_texture(deformator._R, deformator._G, deformator._B);
+                    viewer.data().show_texture = true;
+                    new_texture = false;
+                }
+            }
+        }
+        return false;
+    };
     thread* viewer_loop = new thread([&]()
     {
+        viewer.data().set_mesh(V,F);
+        viewer.core.is_animating = true;
         viewer.launch();
     });
+
+    int a = 0;
+    cin >> a;
+    
 
     //pull keypoint updates from unity
     UdpServerParser unityKeypointsParser;
 
-    int a = 0;
     cin >> a;
+
     //init spout receiver
     cv::Mat game_frame;
     //1024x764
-    Opencv2Spout spoutConverter(argc, argv, 1024, 768, false);
+    /*Opencv2Spout spoutConverter(argc, argv, 1024, 768, false);
     char receiverName[256];
     strcpy_s(receiverName, 256, "UserPerspective");
     bool receiverExists = spoutConverter.initReceiver(receiverName);
@@ -140,8 +188,22 @@ int main(int argc, char **argv)
     {
         cout << "No receiver detected." << endl;
         return -1;
+    }*/
+    cv::Mat gray = cv::Mat();
+    cv::Mat img;
+    cv::VideoCapture cap;
+    Opencv2Spout spoutConverter(argc, argv, 1024, 768, false);
+    char nombreReceiver[256];
+    strcpy_s(nombreReceiver, 256, "UserPerspective");
+    bool receiverExists = spoutConverter.initReceiver(nombreReceiver);
+    if (receiverExists)
+        cout << "Receiver " << nombreReceiver << " detected " << endl;
+    else
+    {
+        cout << "No receiver detected, tacking Camera in slot 0." << endl;
+        return -1;
     }
-
+    
 
 
 #pragma endregion
@@ -246,24 +308,27 @@ int main(int argc, char **argv)
     // get frames from game with hand texture and position
     thread* game_frames_loop = new thread([&]()
     {
-        while (isAlgorithmRunning)
-        {
-            game_frame = spoutConverter.receiveTexture();
-            //spoutConverter.draw(game_frame, true);
-            bool success = unityKeypointsParser.updatedKeypoints(unity_keypoint);
-            if (success && !isSetMesh)
-            {
-                SetMeshFromFrame(game_frame, unity_keypoint);
-                isSetMesh = true;
-            }
-            else if(success)
-            {
-                UpdateTextureAndHandles(game_frame, unity_keypoint);
-            }
-            if (cv::waitKey(30) > 0)
-                break;
-        }
+        
     });
+
+    while (isAlgorithmRunning)
+    {
+        game_frame = spoutConverter.receiveTexture();
+        //spoutConverter.draw(game_frame, true);
+        //cv::waitKey(0);
+        bool success = unityKeypointsParser.updatedKeypoints(unity_keypoint);
+        if (success && !isSetMesh)
+        {
+
+            SetMeshFromFrame(game_frame, unity_keypoint);
+            isSetMesh = true;
+        }
+        else if (success)
+        {
+            UpdateTextureAndHandles(game_frame, unity_keypoint);
+        }
+        Sleep(30);
+    }
 
     while (isAlgorithmRunning)
     {
@@ -277,8 +342,8 @@ int main(int argc, char **argv)
             return 0;
         }
     }
-
 #pragma endregion
 
     return 0;
 }
+
