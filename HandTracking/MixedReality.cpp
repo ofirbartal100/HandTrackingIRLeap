@@ -71,7 +71,6 @@ void UpdateTextureAndHandles(cv::Mat& image, std::vector<cv::Point2f>& v)
         viewer.data().set_texture(deformator._R, deformator._G, deformator._B);*/
         new_data = true;
         new_texture = true;
-        cout << "Updated" << endl;
     }
 }
 

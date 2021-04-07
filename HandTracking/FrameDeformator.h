@@ -37,12 +37,9 @@ class FrameDeformation
         delta_coordinates = laplacian * U;
         igl::cat(1, delta_coordinates, constraint_vertex_values, delta_coordinates_with_constraints);
 
-        auto least_squares_x = solver.solve(delta_coordinates_with_constraints.col(0));
-        auto least_squares_y = solver.solve(delta_coordinates_with_constraints.col(1));
-        U.col(0) << Eigen::MatrixXd(least_squares_x); //inplace change
-        U.col(1) << Eigen::MatrixXd(least_squares_y);
-        // Send new positions, update normals, recenter
-        //viewer.data().set_mesh(U, F);
+        auto least_squares = solver.solve(delta_coordinates_with_constraints);
+        U = Eigen::MatrixXd(least_squares);
+        
     }
 
     int getMaxAreaContourId(std::vector<std::vector<cv::Point>> contours) {
@@ -168,12 +165,12 @@ class FrameDeformation
     int len_contour;
     // Allocate temporary buffers
 
-    Eigen::MatrixXd _control_points,_control_target_points;
+    Eigen::MatrixXd _control_points, _control_target_points;
     Eigen::SparseMatrix<double>  _control_target_points_laplacian_indexes;
-    //int num_of_handle_points = 21;
-    int num_of_handle_points = 1;
+    int num_of_handle_points = 21;
+    //int num_of_handle_points = 1;
 
-    Eigen::SparseMatrix<double> laplacian,laplacian_with_constraints;
+    Eigen::SparseMatrix<double> laplacian, laplacian_with_constraints;
     Eigen::MatrixXd  delta_coordinates;
 
     // Solve (L+C) U` = delta+C
@@ -199,11 +196,6 @@ public:
             _control_target_points.row(i) << control_points_targets[i].x, control_points_targets[i].y;
         }
         LaplacianDeformationOperator(_control_target_points);
-
-        // Send new positions, update normals, recenter
-        //viewer.data().set_mesh(U, F);
-
-        //save to mat
     }
 
     void SetMeshFromFrame(cv::Mat& frame, std::vector<cv::Point2f> control_points)
@@ -213,36 +205,23 @@ public:
         cout << _control_points << endl;
         auto contour = extract_contour_from_image(frame);
         _contour.clear();
-        for(cv::Point point : contour)
+        for (cv::Point point : contour)
         {
             _contour.push_back(cv::Point2f(point.x, point.y));
-            
+
         }
-        for (cv::Point p : control_points)
-        {
-            cv::circle(frame, cv::Point(p.x,frame.rows-p.y), 3, cv::Scalar(0, 0, 255), -1);
-        }
-        
-        cv::imshow("frame", frame);
-        cv::waitKey(0);
+       
         //to mesh
         triangulate_contour(_contour, _control_points, V, F);
         len_contour = (int)_contour.size();
-        cout << len_contour << endl;
 
         U = V;
-        //viewer.data().set_mesh(U, F);
 
         // Draw texture
         UV = U;
         UV.col(0) /= frame.cols;
         UV.col(1) /= frame.rows;
-        //viewer.data().set_uv(UV);
         ImageMatToEigen(frame, _R, _G, _B);
-        //viewer.data().set_texture(_R, _G, _B);
-        //viewer.data().show_texture = true;
-
-        //viewer.launch();
 
         //set control handels
         _control_target_points_laplacian_indexes.resize(num_of_handle_points, V.rows());
@@ -252,11 +231,14 @@ public:
             int vertex_index_in_laplacian = len_contour + i; //since handle points is right after contour points (triangulation)
             ijv.push_back(Eigen::Triplet<double>(i, vertex_index_in_laplacian, 1));
         }
+
+
         _control_target_points_laplacian_indexes.setFromTriplets(ijv.begin(), ijv.end());
 
         // Compute Laplace-Beltrami operator: #V by #V
         igl::cotmatrix(U, F, laplacian);
         igl::cat(1, laplacian, _control_target_points_laplacian_indexes, laplacian_with_constraints);
+
         solver.compute(laplacian_with_constraints);
 
         isInitialized = true;
@@ -267,7 +249,6 @@ public:
         if (!isInitialized) return;
 
         //inputs
-
         DeformMesh(control_points);
         vector_points_to_matrix(control_points, _control_points);
 
@@ -277,7 +258,6 @@ public:
         UV.col(1) /= frame.rows;
 
         ImageMatToEigen(frame, _R, _G, _B);
-        /*viewer.data().set_uv(UV);
-        viewer.data().set_texture(R, G, B);*/
+        
     }
 };
